@@ -7,7 +7,6 @@ import (
 )
 
 type ResponseDto struct {
-	Token   string      `json:"token"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 	Errors  []string    `json:"errors"`

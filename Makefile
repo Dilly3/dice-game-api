@@ -35,8 +35,7 @@ run:
 	@go run main.go 
 air:
 	@air
-mock:
-	@mockgen -package mockdb -destination db/mock/store.go github.com/dilly3/dice-game-api/db/sqlc Store
+
 
 # docker commands to stop and remove the container
 docker-stop:
