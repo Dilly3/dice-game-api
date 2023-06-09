@@ -15,24 +15,23 @@
 
 ## EndPoints
 
-* ###  POST localhost:8000/api/v1/register
-* ###  POST localhost:8000/api/v1/login
-* ###  POST localhost:8000/api/v1/credit
-* ###  GET localhost:8000/api/v1/roll
-* ###  GET localhost:8000/api/v1/balance
-* ###  GET localhost:8000/api/v1/start
-* ###  GET localhost:8000/api/v1/end
-* ###  GET localhost:8000/api/v1/logout
-* ###  GET localhost:8000/api/v1/transactions
-* ###  GET localhost:8000/api/v1/session
+* #### POST localhost:8000/api/v1/register 
+* ####  POST localhost:8000/api/v1/login
+* ####  POST localhost:8000/api/v1/credit
+* ####  GET localhost:8000/api/v1/roll
+* ####  GET localhost:8000/api/v1/balance
+* ####  GET localhost:8000/api/v1/start
+* ####  GET localhost:8000/api/v1/end
+* ####  GET localhost:8000/api/v1/logout
+* ####  GET localhost:8000/api/v1/transactions
+* ####  GET localhost:8000/api/v1/session
 
-* ### GET localhost:8000/{code}
 
 
 <br>
 
-## POST 
-* ### localhost:8000/api/register
+### POST 
+* ### localhost:8000/api/v1/register
 
 >> Request Body 
 
@@ -64,9 +63,8 @@
 
 <br>
 
-
-## POST 
-* ### localhost:8000/api/login
+### GET 
+* ##### localhost:8000/api/login
 
 >> Request Body 
 
@@ -92,10 +90,35 @@
     "timestamp": "2023-06-09 21:36:00"
 }
 ```
+### GET
+* ##### localhost:8000/api/v1/session
+
+
+>> Response 
+
+```GO
+{
+    "isSessionActive": false
+
+}
+```
+### GET
+* ##### localhost:8000/api/v1/start
+
+
+>> Response 
+
+```GO
+{
+    "debit": "20 sats",
+    "isSessionActive": true,
+    "luckyNumber": 9,
+    "message": "game started, roll dice. good luck!"
+}
+```
+
 
  
-
-```
 
 Run Program
 
@@ -115,5 +138,5 @@ DATABASE=dice_game
 >> RUN migrate-up
 
 
->> make run
+>> RUN make air
 ```
