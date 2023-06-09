@@ -23,7 +23,7 @@ type User struct {
 	Lastname  string    `json:"lastname"`
 	Username  string    `json:"username"`
 	GameMode  bool      `json:"game_mode"`
-	Password  string    `json:"password"`
+	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
