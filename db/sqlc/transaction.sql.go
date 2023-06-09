@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 )
 
 const createTransaction = `-- name: CreateTransaction :one
@@ -16,13 +15,13 @@ INSERT INTO transactions (
 ) VALUES (
   $1, $2 , $3
 )
-RETURNING id, user_id, amount, transaction_type, created_at
+RETURNING id, user_id, username, amount, transaction_type, created_at
 `
 
 type CreateTransactionParams struct {
-	UserID          sql.NullInt64  `json:"user_id"`
-	Amount          int64          `json:"amount"`
-	TransactionType sql.NullString `json:"transaction_type"`
+	UserID          int64  `json:"user_id"`
+	Amount          int64  `json:"amount"`
+	TransactionType string `json:"transaction_type"`
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
@@ -31,6 +30,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
+		&i.Username,
 		&i.Amount,
 		&i.TransactionType,
 		&i.CreatedAt,
@@ -39,14 +39,14 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 }
 
 const getTransaction = `-- name: GetTransaction :one
-SELECT id, user_id, amount, transaction_type, created_at FROM transactions
+SELECT id, user_id, username, amount, transaction_type, created_at FROM transactions
 WHERE user_id = $1
 AND transaction_type = $2
 `
 
 type GetTransactionParams struct {
-	UserID          sql.NullInt64  `json:"user_id"`
-	TransactionType sql.NullString `json:"transaction_type"`
+	UserID          int64  `json:"user_id"`
+	TransactionType string `json:"transaction_type"`
 }
 
 func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error) {
@@ -55,6 +55,7 @@ func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
+		&i.Username,
 		&i.Amount,
 		&i.TransactionType,
 		&i.CreatedAt,
@@ -63,16 +64,17 @@ func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) 
 }
 
 const getTransactionByUserId = `-- name: GetTransactionByUserId :one
-SELECT id, user_id, amount, transaction_type, created_at FROM transactions
+SELECT id, user_id, username, amount, transaction_type, created_at FROM transactions
 WHERE user_id = $1
 `
 
-func (q *Queries) GetTransactionByUserId(ctx context.Context, userID sql.NullInt64) (Transaction, error) {
+func (q *Queries) GetTransactionByUserId(ctx context.Context, userID int64) (Transaction, error) {
 	row := q.db.QueryRowContext(ctx, getTransactionByUserId, userID)
 	var i Transaction
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
+		&i.Username,
 		&i.Amount,
 		&i.TransactionType,
 		&i.CreatedAt,

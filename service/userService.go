@@ -36,10 +36,48 @@ func (s *UserService) CreateUser(userData db.CreateUserParams) (db.User, error) 
 	if err != nil {
 		return db.User{}, fmt.Errorf("database error : %v", err)
 	}
+
+	s.Database.CreateWallet(context.Background(), db.CreateWalletParams{
+		UserID:   user.ID,
+		Username: user.Username,
+	})
 	return user, nil
 
 }
 
 func (s *UserService) GetAllUsers(ctx context.Context, arg db.ListUsersParams) ([]db.User, error) {
 	return s.Database.ListUsers(ctx, arg)
+}
+
+func (s *UserService) GetWalletBalance(username string) (int64, error) {
+	wallet, err := s.Database.Querier.GetWalletByUsername(context.Background(), username)
+	if err != nil {
+		return 0, fmt.Errorf("canr get wallet : %v", err)
+	}
+	return wallet.Balance, nil
+}
+
+func (s UserService) CreditWallet(username string, amount int64) error {
+	err := s.Database.CreditWallet(context.Background(), db.DebitWalletParam{
+		Amount:   amount,
+		Username: username,
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s UserService) DebitWallet(username string, amount int64) error {
+	err := s.Database.DebitWallet(context.Background(), db.DebitWalletParam{
+		Amount:   amount,
+		Username: username,
+	})
+
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+
+	return nil
 }

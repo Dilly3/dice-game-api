@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	db "github.com/dilly3/dice-game-api/db/sqlc"
 	"github.com/dilly3/dice-game-api/service"
@@ -36,5 +37,52 @@ func (h Handler) GetUsers() func(*fiber.Ctx) error {
 		}
 
 		return c.JSON(users)
+	}
+}
+
+func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		username := c.Params("username")
+		bal, err := h.userService.GetWalletBalance(username)
+
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(bal)
+	}
+}
+
+func (h Handler) CreditWallet() func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		username := c.Params("username")
+		amt, err := strconv.Atoi(c.Params("amount"))
+		if err != nil {
+			return fmt.Errorf("cant parse string : %v", err)
+		}
+		err = h.userService.CreditWallet(username, int64(amt))
+
+		if err != nil {
+			return err
+		}
+
+		return c.JSON("successful")
+	}
+}
+
+func (h Handler) DebitWallet() func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		username := c.Params("username")
+		amt, err := strconv.Atoi(c.Params("amount"))
+		if err != nil {
+			return fmt.Errorf("cant parse string : %v", err)
+		}
+		err = h.userService.DebitWallet(username, int64(amt))
+
+		if err != nil {
+			return err
+		}
+
+		return c.JSON("successful")
 	}
 }

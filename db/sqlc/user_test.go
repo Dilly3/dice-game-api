@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func CreateUser(t *testing.T) User {
+func CreateUser(t *testing.T) (User, Wallet) {
 	params := CreateUserParams{
 		Firstname: util.GenerateRandomString(8),
 		Lastname:  util.GenerateRandomString(9),
@@ -21,10 +21,14 @@ func CreateUser(t *testing.T) User {
 	require.NotEmpty(t, user)
 	require.Equal(t, params.Firstname, user.Firstname)
 	user, err = StoreIntx.GetUserByUsername(context.Background(), user.Username)
+	wallet, err := StoreIntx.CreateWallet(context.Background(), CreateWalletParams{
+		UserID:   user.ID,
+		Username: user.Username,
+	})
 	if err != nil {
 		panic(err)
 	}
-	return user
+	return user, wallet
 }
 
 func TestCreateUser(t *testing.T) {

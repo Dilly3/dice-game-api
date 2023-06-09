@@ -15,7 +15,7 @@ INSERT INTO users (
 ) VALUES (
   $1, $2 , $3 , $4 , $5
 )
-RETURNING id, firstname, lastname, username, email, password, balance, created_at
+RETURNING id, firstname, lastname, username, email, password, created_at
 `
 
 type CreateUserParams struct {
@@ -25,8 +25,6 @@ type CreateUserParams struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 }
-
-
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
@@ -44,7 +42,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.Balance,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -60,8 +57,29 @@ func (q *Queries) DeleteUser(ctx context.Context, username string) error {
 	return err
 }
 
+const getUser = `-- name: GetUser :one
+SELECT id, firstname, lastname, username, email, password, created_at FROM users
+WHERE username = $1
+LIMIT 1
+`
+
+func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, firstname, lastname, username, email, password, balance, created_at FROM users
+SELECT id, firstname, lastname, username, email, password, created_at FROM users
 WHERE username = $1
 `
 
@@ -75,14 +93,13 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.Balance,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserForUpdate = `-- name: GetUserForUpdate :one
-SELECT id, firstname, lastname, username, email, password, balance, created_at FROM users
+SELECT id, firstname, lastname, username, email, password, created_at FROM users
 WHERE username = $1
 FOR UPDATE
 `
@@ -97,14 +114,13 @@ func (q *Queries) GetUserForUpdate(ctx context.Context, username string) (User, 
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.Balance,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, firstname, lastname, username, email, password, balance, created_at FROM users
+SELECT id, firstname, lastname, username, email, password, created_at FROM users
 ORDER BY lastname ASC
 LIMIT $1
 OFFSET $2
@@ -131,7 +147,6 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.Username,
 			&i.Email,
 			&i.Password,
-			&i.Balance,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -145,20 +160,4 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 		return nil, err
 	}
 	return items, nil
-}
-
-const updateUser = `-- name: UpdateUser :exec
-UPDATE users
-  set balance = $2
-WHERE username = $1
-`
-
-type UpdateUserParams struct {
-	Username string `json:"username"`
-	Balance  int64  `json:"balance"`
-}
-
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.ExecContext(ctx, updateUser, arg.Username, arg.Balance)
-	return err
 }

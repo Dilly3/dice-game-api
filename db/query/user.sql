@@ -22,12 +22,15 @@ ORDER BY lastname ASC
 LIMIT $1
 OFFSET $2;
 
+-- name: GetUser :one
+SELECT * FROM users
+WHERE username = $1
+LIMIT 1;
+
+
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE username = $1;
 
 
--- name: UpdateUser :exec
-UPDATE users
-  set balance = $2
-WHERE username = $1;
+

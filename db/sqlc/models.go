@@ -5,16 +5,16 @@
 package db
 
 import (
-	"database/sql"
 	"time"
 )
 
 type Transaction struct {
-	ID              int64          `json:"id"`
-	UserID          sql.NullInt64  `json:"user_id"`
-	Amount          int64          `json:"amount"`
-	TransactionType sql.NullString `json:"transaction_type"`
-	CreatedAt       time.Time      `json:"created_at"`
+	ID              int64     `json:"id"`
+	UserID          int64     `json:"user_id"`
+	Username        string    `json:"username"`
+	Amount          int64     `json:"amount"`
+	TransactionType string    `json:"transaction_type"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 type User struct {
@@ -23,7 +23,14 @@ type User struct {
 	Lastname  string    `json:"lastname"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
-	Password  string    `json:"-"`
-	Balance   int64     `json:"balance"`
+	Password  string    `json:"password"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type Wallet struct {
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"user_id"`
+	Username  string    `json:"username"`
+	Balance   int64     `json:"balance"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

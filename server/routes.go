@@ -23,7 +23,12 @@ func NewServer(store *db.Store) Server {
 	h := setup(store)
 	app := fiber.New()
 
-	app.Get("/all", h.GetUsers())
+	v1 := app.Group("api/v1")
+
+	v1.Get("/all", h.GetUsers())
+	v1.Get("/balance/:username", h.GetWalletBalance())
+	v1.Get("/credit/:username/:amount", h.CreditWallet())
+	v1.Get("/debit/:username/:amount", h.DebitWallet())
 
 	//app.Use(middleware.Timeout(60 * time.Second))
 

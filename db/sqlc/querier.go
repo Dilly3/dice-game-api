@@ -6,19 +6,22 @@ package db
 
 import (
 	"context"
-	"database/sql"
 )
 
 type Querier interface {
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	CreateWallet(ctx context.Context, arg CreateWalletParams) (Wallet, error)
 	DeleteUser(ctx context.Context, username string) error
 	GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error)
-	GetTransactionByUserId(ctx context.Context, userID sql.NullInt64) (Transaction, error)
+	GetTransactionByUserId(ctx context.Context, userID int64) (Transaction, error)
+	GetUser(ctx context.Context, username string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserForUpdate(ctx context.Context, username string) (User, error)
+	GetWalletByUsername(ctx context.Context, username string) (Wallet, error)
+	GetWalletByUsernameForUpdate(ctx context.Context, username string) (Wallet, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
-	UpdateUser(ctx context.Context, arg UpdateUserParams) error
+	UpdateWallet(ctx context.Context, arg UpdateWalletParams) error
 }
 
 var _ Querier = (*Queries)(nil)
