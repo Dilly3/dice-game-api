@@ -11,7 +11,7 @@ type Server struct {
 	Router  *fiber.App
 }
 
-func setup(store *db.Store) Handler {
+func Setup(store db.Store) Handler {
 
 	userServ := service.NewUserService(store)
 	transServ := service.NewTransactionService(store)
@@ -19,16 +19,23 @@ func setup(store *db.Store) Handler {
 	return NewHandler(transServ, userServ)
 }
 
-func NewServer(store *db.Store) Server {
-	h := setup(store)
+func NewServer(h Handler) Server {
+
 	app := fiber.New()
 
 	v1 := app.Group("api/v1")
-
+	v1.Post("/register", h.Register())
+	v1.Post("/login", h.Login())
 	v1.Get("/all", h.GetUsers())
 	v1.Get("/balance/:username", h.GetWalletBalance())
-	v1.Get("/credit/:username/:amount", h.CreditWallet())
-	v1.Get("/debit/:username/:amount", h.DebitWallet())
+	v1.Post("/credit", h.CreditWallet())
+	v1.Post("/debit", h.DebitWallet())
+	v1.Get("/roll", h.RollDice())
+	v1.Get("/start", h.StartGame())
+	v1.Get("/session", h.GetSessionState())
+	v1.Get("/end", h.StopGame())
+	v1.Get("/logout", h.Logout())
+	v1.Get("/transactions", h.GetTransactions())
 
 	//app.Use(middleware.Timeout(60 * time.Second))
 

@@ -16,7 +16,7 @@ import (
 )
 
 var err error
-var StoreIntx *db.Store
+var StoreIntx db.Store
 
 func init() {
 
@@ -40,7 +40,8 @@ func main() {
 
 	<-time.After(time.Second * 2)
 	StoreIntx := db.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
-	s := server.NewServer(StoreIntx)
+	h := server.Setup(StoreIntx)
+	s := server.NewServer(h)
 
 	log.Fatal(s.Router.Listen(":8000"))
 }

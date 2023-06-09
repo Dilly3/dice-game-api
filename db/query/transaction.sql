@@ -1,8 +1,8 @@
 -- name: CreateTransaction :one
 INSERT INTO transactions (
-    user_id, amount, transaction_type
+    user_id, amount, transaction_type, username
 ) VALUES (
-  $1, $2 , $3
+  $1, $2 , $3 , $4
 )
 RETURNING *;
 
@@ -11,6 +11,6 @@ SELECT * FROM transactions
 WHERE user_id = $1
 AND transaction_type = $2;
 
--- name: GetTransactionByUserId :one
+-- name: GetTransactionsByUsername :many
 SELECT * FROM transactions
-WHERE user_id = $1;
+WHERE username = $1;

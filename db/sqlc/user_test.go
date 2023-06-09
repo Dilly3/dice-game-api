@@ -13,7 +13,6 @@ func CreateUser(t *testing.T) (User, Wallet) {
 		Firstname: util.GenerateRandomString(8),
 		Lastname:  util.GenerateRandomString(9),
 		Username:  util.GenerateRandomUsername(5),
-		Email:     util.GenerateRandomEmail(6),
 		Password:  util.GenerateRandomString(10),
 	}
 	user, err := StoreIntx.CreateUser(context.Background(), params)

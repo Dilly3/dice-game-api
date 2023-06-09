@@ -16,7 +16,7 @@ import (
 
 var C config.Configuration
 var err error
-var StoreIntx *Store
+var StoreIntx Store
 
 func init() {
 	err := godotenv.Load("../../.env")
@@ -41,5 +41,6 @@ func TestMain(m *testing.M) {
 	}
 
 	StoreIntx = NewStore(dbx)
+
 	os.Exit(m.Run())
 }

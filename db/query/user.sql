@@ -1,8 +1,8 @@
 -- name: CreateUser :one
 INSERT INTO users (
-  firstname, lastname, username, email, password
+  firstname, lastname, username, password
 ) VALUES (
-  $1, $2 , $3 , $4 , $5
+  $1, $2 , $3 , $4 
 )
 RETURNING *;
 
@@ -30,6 +30,11 @@ LIMIT 1;
 
 -- name: DeleteUser :exec
 DELETE FROM users
+WHERE username = $1;
+
+-- name: UpdateUserGameMode :exec
+UPDATE users 
+ set game_mode = $2  
 WHERE username = $1;
 
 

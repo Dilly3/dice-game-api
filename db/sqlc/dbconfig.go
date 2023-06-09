@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func StartDb(DbDriverName string, DbSourceName string) *Store {
+func StartDb(DbDriverName string, DbSourceName string) Store {
 	dbx, err := sql.Open(DbDriverName, DbSourceName)
 
 	if err != nil {

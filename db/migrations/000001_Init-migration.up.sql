@@ -3,7 +3,7 @@ CREATE TABLE "users" (
   "firstname" varchar(30) NOT NULL,
   "lastname" varchar(30) NOT NULL,
   "username" varchar(20) UNIQUE NOT NULL,
-  "email" varchar(30) UNIQUE NOT NULL,
+  "game_mode" boolean NOT NULL DEFAULT false,
   "password" varchar(100) NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
@@ -12,7 +12,7 @@ CREATE TABLE "transactions" (
   "id" bigserial PRIMARY KEY,
   "user_id" bigint NOT NULL,
   "username" varchar(20) NOT NULL,
-  "amount" bigint NOT NULL,
+  "amount" int NOT NULL,
   "transaction_type" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
@@ -21,7 +21,8 @@ CREATE TABLE "wallets" (
   "id" bigserial PRIMARY KEY,
   "user_id" bigint UNIQUE NOT NULL,
   "username" varchar(20) UNIQUE NOT NULL,
-  "balance" bigint NOT NULL DEFAULT 0,
+  "balance" int NOT NULL DEFAULT 0,
+  "assets" varchar(10) NOT NULL DEFAULT 'sats',
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 

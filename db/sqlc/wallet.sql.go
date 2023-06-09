@@ -15,7 +15,7 @@ INSERT INTO wallets (
 ) VALUES (
   $1, $2 
 )
-RETURNING id, user_id, username, balance, updated_at
+RETURNING id, user_id, username, balance, assets, updated_at
 `
 
 type CreateWalletParams struct {
@@ -31,13 +31,14 @@ func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) (Wal
 		&i.UserID,
 		&i.Username,
 		&i.Balance,
+		&i.Assets,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getWalletByUsername = `-- name: GetWalletByUsername :one
-SELECT id, user_id, username, balance, updated_at FROM wallets
+SELECT id, user_id, username, balance, assets, updated_at FROM wallets
 WHERE username = $1
 `
 
@@ -49,13 +50,14 @@ func (q *Queries) GetWalletByUsername(ctx context.Context, username string) (Wal
 		&i.UserID,
 		&i.Username,
 		&i.Balance,
+		&i.Assets,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getWalletByUsernameForUpdate = `-- name: GetWalletByUsernameForUpdate :one
-SELECT id, user_id, username, balance, updated_at FROM wallets
+SELECT id, user_id, username, balance, assets, updated_at FROM wallets
 WHERE username = $1
 FOR UPDATE
 `
@@ -68,6 +70,7 @@ func (q *Queries) GetWalletByUsernameForUpdate(ctx context.Context, username str
 		&i.UserID,
 		&i.Username,
 		&i.Balance,
+		&i.Assets,
 		&i.UpdatedAt,
 	)
 	return i, err
@@ -81,7 +84,7 @@ WHERE username = $1
 
 type UpdateWalletParams struct {
 	Username string `json:"username"`
-	Balance  int64  `json:"balance"`
+	Balance  int32  `json:"balance"`
 }
 
 func (q *Queries) UpdateWallet(ctx context.Context, arg UpdateWalletParams) error {

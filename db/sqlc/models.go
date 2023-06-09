@@ -12,7 +12,7 @@ type Transaction struct {
 	ID              int64     `json:"id"`
 	UserID          int64     `json:"user_id"`
 	Username        string    `json:"username"`
-	Amount          int64     `json:"amount"`
+	Amount          int32     `json:"amount"`
 	TransactionType string    `json:"transaction_type"`
 	CreatedAt       time.Time `json:"created_at"`
 }
@@ -22,7 +22,7 @@ type User struct {
 	Firstname string    `json:"firstname"`
 	Lastname  string    `json:"lastname"`
 	Username  string    `json:"username"`
-	Email     string    `json:"email"`
+	GameMode  bool      `json:"game_mode"`
 	Password  string    `json:"password"`
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -31,6 +31,7 @@ type Wallet struct {
 	ID        int64     `json:"id"`
 	UserID    int64     `json:"user_id"`
 	Username  string    `json:"username"`
-	Balance   int64     `json:"balance"`
+	Balance   int32     `json:"balance"`
+	Assets    string    `json:"assets"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

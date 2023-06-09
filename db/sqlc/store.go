@@ -6,8 +6,15 @@ import (
 	"fmt"
 )
 
-type Store struct {
+type Store interface {
 	Querier
+	execTx(ctx context.Context, fn func(*Queries) error) error
+	DebitWallet(ctx context.Context, arg UpdateWalletParams) error
+	CreditWallet(ctx context.Context, arg UpdateWalletParams) error
+}
+
+type PGXStore struct {
+	*Queries
 	DB *sql.DB
 }
 
@@ -17,14 +24,14 @@ const (
 	UNSUCCESSFUL = "UNSUCCESSFUL"
 )
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &PGXStore{
 		DB:      db,
-		Querier: New(db),
+		Queries: New(db),
 	}
 }
 
-func (s *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (s *PGXStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -41,13 +48,13 @@ func (s *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 }
 
 type DebitWalletParam struct {
-	Amount   int64
+	Amount   int32
 	Username string
 }
 
-func (s *Store) DebitWallet(ctx context.Context, arg DebitWalletParam) error {
-	var err1 error
-	err1 = s.execTx(ctx, func(q *Queries) error {
+func (s *PGXStore) DebitWallet(ctx context.Context, arg UpdateWalletParams) error {
+
+	err1 := s.execTx(ctx, func(q *Queries) error {
 		var err error
 		var wal Wallet
 
@@ -55,13 +62,13 @@ func (s *Store) DebitWallet(ctx context.Context, arg DebitWalletParam) error {
 		if err != nil {
 			return err
 		}
-		if wal.Balance < arg.Amount {
+		if wal.Balance < arg.Balance {
 			return fmt.Errorf("insufficient funds : %v", err)
 		}
 
 		err = q.UpdateWallet(ctx, UpdateWalletParams{
 			Username: arg.Username,
-			Balance:  wal.Balance - arg.Amount,
+			Balance:  wal.Balance - arg.Balance,
 		})
 		if err != nil {
 			return err
@@ -69,8 +76,9 @@ func (s *Store) DebitWallet(ctx context.Context, arg DebitWalletParam) error {
 
 		_, err = q.CreateTransaction(ctx, CreateTransactionParams{
 			UserID:          wal.UserID,
-			Amount:          arg.Amount,
+			Amount:          arg.Balance,
 			TransactionType: DEBIT,
+			Username:        wal.Username,
 		})
 
 		if err != nil {
@@ -83,9 +91,9 @@ func (s *Store) DebitWallet(ctx context.Context, arg DebitWalletParam) error {
 	return err1
 }
 
-func (s *Store) CreditWallet(ctx context.Context, arg DebitWalletParam) error {
-	var err1 error
-	err1 = s.execTx(ctx, func(q *Queries) error {
+func (s *PGXStore) CreditWallet(ctx context.Context, arg UpdateWalletParams) error {
+
+	err1 := s.execTx(ctx, func(q *Queries) error {
 		var err error
 		var wal Wallet
 
@@ -93,16 +101,16 @@ func (s *Store) CreditWallet(ctx context.Context, arg DebitWalletParam) error {
 		if err != nil {
 			return err
 		}
-		if arg.Amount > 155 {
-			return fmt.Errorf("cant credit above 155sats : %v", err)
+		if arg.Balance != 155 {
+			return fmt.Errorf("can only credit 155 sats : %v", err)
 		}
 		if wal.Balance >= 35 {
-			return fmt.Errorf("still have enough money : %v", err)
+			return fmt.Errorf("you still have up to 35 sats : %v", err)
 		}
 
 		err = q.UpdateWallet(ctx, UpdateWalletParams{
 			Username: arg.Username,
-			Balance:  wal.Balance + arg.Amount,
+			Balance:  wal.Balance + arg.Balance,
 		})
 		if err != nil {
 			return err
@@ -110,8 +118,10 @@ func (s *Store) CreditWallet(ctx context.Context, arg DebitWalletParam) error {
 
 		_, err = q.CreateTransaction(ctx, CreateTransactionParams{
 			UserID:          wal.UserID,
-			Amount:          arg.Amount,
+			Amount:          arg.Balance,
 			TransactionType: CREDIT,
+
+			Username: wal.Username,
 		})
 
 		if err != nil {

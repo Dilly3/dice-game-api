@@ -11,21 +11,27 @@ import (
 
 const createTransaction = `-- name: CreateTransaction :one
 INSERT INTO transactions (
-    user_id, amount, transaction_type
+    user_id, amount, transaction_type, username
 ) VALUES (
-  $1, $2 , $3
+  $1, $2 , $3 , $4
 )
 RETURNING id, user_id, username, amount, transaction_type, created_at
 `
 
 type CreateTransactionParams struct {
 	UserID          int64  `json:"user_id"`
-	Amount          int64  `json:"amount"`
+	Amount          int32  `json:"amount"`
 	TransactionType string `json:"transaction_type"`
+	Username        string `json:"username"`
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
-	row := q.db.QueryRowContext(ctx, createTransaction, arg.UserID, arg.Amount, arg.TransactionType)
+	row := q.db.QueryRowContext(ctx, createTransaction,
+		arg.UserID,
+		arg.Amount,
+		arg.TransactionType,
+		arg.Username,
+	)
 	var i Transaction
 	err := row.Scan(
 		&i.ID,
@@ -63,21 +69,37 @@ func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) 
 	return i, err
 }
 
-const getTransactionByUserId = `-- name: GetTransactionByUserId :one
+const getTransactionsByUsername = `-- name: GetTransactionsByUsername :many
 SELECT id, user_id, username, amount, transaction_type, created_at FROM transactions
-WHERE user_id = $1
+WHERE username = $1
 `
 
-func (q *Queries) GetTransactionByUserId(ctx context.Context, userID int64) (Transaction, error) {
-	row := q.db.QueryRowContext(ctx, getTransactionByUserId, userID)
-	var i Transaction
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Username,
-		&i.Amount,
-		&i.TransactionType,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, getTransactionsByUsername, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Username,
+			&i.Amount,
+			&i.TransactionType,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

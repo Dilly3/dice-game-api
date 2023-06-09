@@ -11,18 +11,17 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
-  firstname, lastname, username, email, password
+  firstname, lastname, username, password
 ) VALUES (
-  $1, $2 , $3 , $4 , $5
+  $1, $2 , $3 , $4 
 )
-RETURNING id, firstname, lastname, username, email, password, created_at
+RETURNING id, firstname, lastname, username, game_mode, password, created_at
 `
 
 type CreateUserParams struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
 	Username  string `json:"username"`
-	Email     string `json:"email"`
 	Password  string `json:"password"`
 }
 
@@ -31,7 +30,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Firstname,
 		arg.Lastname,
 		arg.Username,
-		arg.Email,
 		arg.Password,
 	)
 	var i User
@@ -40,7 +38,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Firstname,
 		&i.Lastname,
 		&i.Username,
-		&i.Email,
+		&i.GameMode,
 		&i.Password,
 		&i.CreatedAt,
 	)
@@ -58,7 +56,7 @@ func (q *Queries) DeleteUser(ctx context.Context, username string) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, firstname, lastname, username, email, password, created_at FROM users
+SELECT id, firstname, lastname, username, game_mode, password, created_at FROM users
 WHERE username = $1
 LIMIT 1
 `
@@ -71,7 +69,7 @@ func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
 		&i.Firstname,
 		&i.Lastname,
 		&i.Username,
-		&i.Email,
+		&i.GameMode,
 		&i.Password,
 		&i.CreatedAt,
 	)
@@ -79,7 +77,7 @@ func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, firstname, lastname, username, email, password, created_at FROM users
+SELECT id, firstname, lastname, username, game_mode, password, created_at FROM users
 WHERE username = $1
 `
 
@@ -91,7 +89,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Firstname,
 		&i.Lastname,
 		&i.Username,
-		&i.Email,
+		&i.GameMode,
 		&i.Password,
 		&i.CreatedAt,
 	)
@@ -99,7 +97,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const getUserForUpdate = `-- name: GetUserForUpdate :one
-SELECT id, firstname, lastname, username, email, password, created_at FROM users
+SELECT id, firstname, lastname, username, game_mode, password, created_at FROM users
 WHERE username = $1
 FOR UPDATE
 `
@@ -112,7 +110,7 @@ func (q *Queries) GetUserForUpdate(ctx context.Context, username string) (User, 
 		&i.Firstname,
 		&i.Lastname,
 		&i.Username,
-		&i.Email,
+		&i.GameMode,
 		&i.Password,
 		&i.CreatedAt,
 	)
@@ -120,7 +118,7 @@ func (q *Queries) GetUserForUpdate(ctx context.Context, username string) (User, 
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, firstname, lastname, username, email, password, created_at FROM users
+SELECT id, firstname, lastname, username, game_mode, password, created_at FROM users
 ORDER BY lastname ASC
 LIMIT $1
 OFFSET $2
@@ -145,7 +143,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.Firstname,
 			&i.Lastname,
 			&i.Username,
-			&i.Email,
+			&i.GameMode,
 			&i.Password,
 			&i.CreatedAt,
 		); err != nil {
@@ -160,4 +158,20 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateUserGameMode = `-- name: UpdateUserGameMode :exec
+UPDATE users 
+ set game_mode = $2  
+WHERE username = $1
+`
+
+type UpdateUserGameModeParams struct {
+	Username string `json:"username"`
+	GameMode bool   `json:"game_mode"`
+}
+
+func (q *Queries) UpdateUserGameMode(ctx context.Context, arg UpdateUserGameModeParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserGameMode, arg.Username, arg.GameMode)
+	return err
 }
