@@ -30,8 +30,7 @@
 
 <br>
 
-### POST 
-* ### localhost:8000/api/v1/register
+##### POST localhost:8000/api/v1/register
 
 >> Request Body 
 
@@ -63,8 +62,8 @@
 
 <br>
 
-### GET 
-* ##### localhost:8000/api/login
+
+##### POST localhost:8000/api/login
 
 >> Request Body 
 
@@ -90,8 +89,8 @@
     "timestamp": "2023-06-09 21:36:00"
 }
 ```
-### GET
-* ##### localhost:8000/api/v1/session
+<br>
+ ##### GET localhost:8000/api/v1/session
 
 
 >> Response 
@@ -102,8 +101,9 @@
 
 }
 ```
-### GET
-* ##### localhost:8000/api/v1/start
+<br>
+
+ ##### GET localhost:8000/api/v1/start
 
 
 >> Response 
@@ -114,6 +114,21 @@
     "isSessionActive": true,
     "luckyNumber": 9,
     "message": "game started, roll dice. good luck!"
+}
+```
+<br>
+
+ ##### POST localhost:8000/api/v1/credit
+  fund your wallet , you can only fund your wallet wit 155 sats. you have to have a balance lower than 35 sats
+
+
+>> Resquest body
+
+```GO
+{
+   {
+    "amount" : 155
+}
 }
 ```
 
