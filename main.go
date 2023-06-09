@@ -26,8 +26,7 @@ func init() {
 	}
 
 	err = envconfig.Process("dicegame", &config.ConfigTx)
-	fmt.Println("Configuration => ", config.ConfigTx.DbDataSourceName)
-	fmt.Println("DRIVER =>", config.ConfigTx.DbDriverName)
+
 	if err != nil {
 		log.Fatal(err.Error())
 	}

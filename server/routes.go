@@ -27,7 +27,7 @@ func NewServer(h Handler) Server {
 	v1.Post("/register", h.Register())
 	v1.Post("/login", h.Login())
 	v1.Get("/all", h.GetUsers())
-	v1.Get("/balance/:username", h.GetWalletBalance())
+	v1.Get("/balance", h.GetWalletBalance())
 	v1.Post("/credit", h.CreditWallet())
 	v1.Post("/debit", h.DebitWallet())
 	v1.Get("/roll", h.RollDice())

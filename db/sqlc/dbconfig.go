@@ -13,8 +13,6 @@ func StartDb(DbDriverName string, DbSourceName string) Store {
 
 	}
 
-	fmt.Println("connected to db")
-
 	StoreIntx := NewStore(dbx)
 	return StoreIntx
 }

@@ -10,7 +10,7 @@ type Store interface {
 	Querier
 	execTx(ctx context.Context, fn func(*Queries) error) error
 	DebitWallet(ctx context.Context, arg UpdateWalletParams) error
-	CreditWallet(ctx context.Context, arg UpdateWalletParams) error
+	CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error
 }
 
 type PGXStore struct {
@@ -91,7 +91,7 @@ func (s *PGXStore) DebitWallet(ctx context.Context, arg UpdateWalletParams) erro
 	return err1
 }
 
-func (s *PGXStore) CreditWallet(ctx context.Context, arg UpdateWalletParams) error {
+func (s *PGXStore) CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error {
 
 	err1 := s.execTx(ctx, func(q *Queries) error {
 		var err error
@@ -101,11 +101,13 @@ func (s *PGXStore) CreditWallet(ctx context.Context, arg UpdateWalletParams) err
 		if err != nil {
 			return err
 		}
-		if arg.Balance != 155 {
-			return fmt.Errorf("can only credit 155 sats : %v", err)
-		}
-		if wal.Balance >= 35 {
-			return fmt.Errorf("you still have up to 35 sats : %v", err)
+		if !win {
+			if arg.Balance != 155 {
+				return fmt.Errorf("can only credit 155 sats : %v", err)
+			}
+			if wal.Balance >= 35 {
+				return fmt.Errorf("you still have up to 35 sats : %v", err)
+			}
 		}
 
 		err = q.UpdateWallet(ctx, UpdateWalletParams{

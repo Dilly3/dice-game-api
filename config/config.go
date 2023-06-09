@@ -21,9 +21,10 @@ type Configuration struct {
 var ConfigTx Configuration
 
 type RollResult struct {
-	RollNumber1 int32 `json:"rollNumber1"`
-	RollNumber2 int32 `json:"rollNumber2"`
-	LuckyNumber int32 `json:"luckyNumber"`
+	RollNumber1   int32 `json:"rollNumber1"`
+	RollNumber2   int32 `json:"rollNumber2"`
+	LuckyNumber   int32 `json:"luckyNumber"`
+	NumberOfTries int32 `json:"numberOfTries"`
 }
 
 func StartGame() {
@@ -31,7 +32,7 @@ func StartGame() {
 	randNum := rand.Int31n(11) + 2
 	ConfigTx.IsGameInSession = true
 	ConfigTx.LuckyNumber = randNum
-	ConfigTx.NumberOfTrials = 5
+	ConfigTx.NumberOfTrials = 10
 
 }
 
@@ -54,6 +55,7 @@ func RollDice() (*RollResult, error) {
 	rollResult.RollNumber2 = num2
 	rollResult.LuckyNumber = ConfigTx.LuckyNumber
 	ConfigTx.NumberOfTrials = ConfigTx.NumberOfTrials - 1
+	rollResult.NumberOfTries = ConfigTx.NumberOfTrials
 
 	return rollResult, nil
 

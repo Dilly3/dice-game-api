@@ -63,7 +63,19 @@ func (s UserService) CreditWallet(username string, amount int32) error {
 	err := s.Database.CreditWallet(context.Background(), db.UpdateWalletParams{
 		Balance:  amount,
 		Username: username,
-	})
+	}, false)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s UserService) CreditWalletForWin(username string, amount int32) error {
+	err := s.Database.CreditWallet(context.Background(), db.UpdateWalletParams{
+		Balance:  amount,
+		Username: username,
+	}, true)
 
 	if err != nil {
 		return err

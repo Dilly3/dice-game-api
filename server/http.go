@@ -109,7 +109,12 @@ func (h Handler) Login() func(*fiber.Ctx) error {
 
 func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		username := c.Params("username")
+		username := c.Cookies("user")
+		if username == "" {
+			c.SendStatus(fiber.StatusForbidden)
+			return c.JSON(fiber.Map{"message": "user not logged in"})
+		}
+
 		bal, assts, err := h.userService.GetWalletBalance(username)
 
 		if err != nil {
@@ -122,17 +127,22 @@ func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
 
 func (h Handler) CreditWallet() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		username := c.Cookies("user")
+		if username == "" {
+			c.SendStatus(fiber.StatusForbidden)
+			return c.JSON(fiber.Map{"message": "user not logged in"})
+		}
+
 		body := &db.CreateWalletDto{}
 		if err := c.BodyParser(body); err == fiber.ErrUnprocessableEntity {
-			c.Status(fiber.StatusBadRequest)
+			c.SendStatus(fiber.StatusBadRequest)
 			return c.JSON(fiber.Map{"message": "bad request"})
 		}
-		username := c.Cookies("user")
 
 		err := h.userService.CreditWallet(username, int32(body.Amount))
 
 		if err != nil {
-			c.Status(fiber.StatusBadRequest)
+			c.SendStatus(fiber.StatusBadRequest)
 			return c.JSON(fiber.Map{"message": err.Error()})
 
 		}
@@ -143,13 +153,18 @@ func (h Handler) CreditWallet() func(*fiber.Ctx) error {
 
 func (h Handler) DebitWallet() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		body := &db.CreateWalletDto{}
-		if err := c.BodyParser(body); err == fiber.ErrUnprocessableEntity {
-			c.Status(fiber.StatusBadRequest)
-			return c.JSON(fiber.Map{"message": "bad request"})
-		}
 
 		username := c.Cookies("user")
+		if username == "" {
+			c.SendStatus(fiber.StatusForbidden)
+			return c.JSON(fiber.Map{"message": "user not logged in"})
+		}
+
+		body := &db.CreateWalletDto{}
+		if err := c.BodyParser(body); err == fiber.ErrUnprocessableEntity {
+			c.SendStatus(fiber.StatusBadRequest)
+			return c.JSON(fiber.Map{"message": "bad request"})
+		}
 
 		err := h.userService.DebitWallet(username, int32(body.Amount))
 
@@ -164,6 +179,12 @@ func (h Handler) DebitWallet() func(*fiber.Ctx) error {
 func (h Handler) GetSessionState() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
+		username := c.Cookies("user")
+		if username == "" {
+			c.SendStatus(fiber.StatusForbidden)
+			return c.JSON(fiber.Map{"message": "user not logged in"})
+		}
+
 		return c.JSON(fiber.Map{"isSessionActive": config.ConfigTx.IsGameInSession})
 	}
 }
@@ -172,6 +193,7 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
+			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 		if config.ConfigTx.IsGameInSession {
@@ -187,7 +209,6 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 
 		config.StartGame()
 		config.ConfigTx.IsGameInSession = true
-		config.ConfigTx.NumberOfTrials = 10
 
 		c.JSON(fiber.Map{"message": "game started, roll dice. good luck!", "debit": "20 sats", "luckyNumber": config.ConfigTx.LuckyNumber, "isSessionActive": config.ConfigTx.IsGameInSession})
 
@@ -201,9 +222,11 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 
 		user := c.Cookies("user")
 		if user == "" {
+			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 		if !config.ConfigTx.IsGameInSession {
+			c.SendStatus(fiber.StatusBadRequest)
 
 			return c.JSON(fiber.Map{"message": "game not in session, start game first"})
 		}
@@ -219,18 +242,15 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 
 		if err != nil {
 
-			c.JSON(fiber.Map{"message": err.Error()})
+			return c.JSON(fiber.Map{"message": err.Error()})
 		}
 		if res.RollNumber1+res.RollNumber2 == config.ConfigTx.LuckyNumber {
-			err := h.userService.CreditWallet(user, 10)
+			err := h.userService.CreditWalletForWin(user, 10)
 			if err != nil {
 				return c.JSON(fiber.Map{"message": err.Error()})
 			}
-			config.ConfigTx.LuckyNumber = 0
-			config.ConfigTx.RollNumber1 = 0
-			config.ConfigTx.RollNumber2 = 0
 
-			return c.JSON(fiber.Map{"message": "you won 10 credits", "result": res})
+			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 credits", "result": res})
 		}
 		return c.JSON(fiber.Map{"message": "you lost", "result": res})
 
@@ -242,9 +262,11 @@ func (h Handler) StopGame() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
+			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 		if !config.ConfigTx.IsGameInSession {
+			c.Status(fiber.StatusUnauthorized)
 			return c.JSON(fiber.Map{"message": "game not in session, start game first"})
 		}
 
@@ -262,6 +284,7 @@ func (h Handler) Logout() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
+			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 		c.Cookie(&fiber.Cookie{
@@ -284,6 +307,7 @@ func (h Handler) GetTransactions() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
+			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 		transactions, err := h.trxService.GetTransactionHistory(user)
