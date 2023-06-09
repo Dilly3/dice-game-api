@@ -3,6 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	config "github.com/dilly3/dice-game-api/config"
@@ -42,5 +46,24 @@ func main() {
 	h := server.Setup(StoreIntx)
 	s := server.NewServer(h)
 
-	log.Fatal(s.Router.Listen(":8000"))
+	errs := make(chan error, 2)
+
+	go func() {
+
+		errs <- s.Router.Listen(":8000")
+	}()
+	c := make(chan os.Signal, 1)
+	go func() {
+		signal.Notify(c, syscall.SIGINT)
+
+	}()
+
+	select {
+	case err := <-errs:
+		log.Printf("server error: %s", err)
+		os.Exit(1)
+	case sig := <-c:
+		log.Printf("received signal %s", sig)
+		os.Exit(1)
+	}
 }
