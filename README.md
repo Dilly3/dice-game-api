@@ -1,29 +1,29 @@
-# Dice-Game-Api
+### Dice-Game-Api
 
-### A Dice game api that you will enjoy. roll and win
+#### A Dice game api that you will enjoy. roll and win
 
 ## Requirements
 *** 
 
-* ### PostMan
-* ### Postgresql
-* ### Docker (Optional)
-* ### Fiber Router
+* #### PostMan
+* #### Postgresql
+* #### Docker (Optional)
+* #### Fiber Router
 
 
 
 
 ## EndPoints
 
-* #### POST localhost:8000/api/v1/register 
-* ####  POST localhost:8000/api/v1/login
-* ####  POST localhost:8000/api/v1/credit
-* ####  GET localhost:8000/api/v1/roll
-* ####  GET localhost:8000/api/v1/balance
-* ####  GET localhost:8000/api/v1/start
-* ####  GET localhost:8000/api/v1/end
-* ####  GET localhost:8000/api/v1/logout
-* ####  GET localhost:8000/api/v1/transactions
+* ##### POST localhost:8000/api/v1/register 
+* ##### POST localhost:8000/api/v1/login
+* ##### POST localhost:8000/api/v1/credit
+* #####  GET localhost:8000/api/v1/roll
+* #####  GET localhost:8000/api/v1/balance
+* #####  GET localhost:8000/api/v1/start
+* #####  GET localhost:8000/api/v1/end
+* #####  GET localhost:8000/api/v1/logout
+* #####  GET localhost:8000/api/v1/transactions
 * ####  GET localhost:8000/api/v1/session
 
 
@@ -36,13 +36,12 @@
 
 ```GO
      {
-       {
+
     "firstname" : "meghan",
    "lastname" : "good",
     "username" : "good90",
     "password" : "12345",
     "confirm_password" : "12345"
-}
     }
 ```
 
@@ -50,14 +49,14 @@
 
 ```GO
 {
-    {
+
     "id": 69,
     "firstname": "meghan",
     "lastname": "good",
     "username": "good90",
     "created_at": "2023-06-09T19:22:31.654395Z"
 }
-}
+
 ```
 
 <br>
