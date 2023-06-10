@@ -47,6 +47,30 @@ If the player’s dual roll does not win, well, he has lost his 5 sat and can re
 * #### Fiber Router
 
 
+Start Program
+
+```GO
+terminal> 
+>> RUN go mod tidy
+>> RUN make setup-docker // if you have docker running on your machine
+
+for local database, set up postgres
+
+Port = 4300
+USER=root 
+PASSWORD=root 
+DATABASE=dice_game
+
+//on the terminal run 
+
+>> make setup-air
+>>  make migrate-up
+>> make air // to run with air
+
+OR 
+
+>> go run main.go
+```
 
 
 ## EndPoints
@@ -177,28 +201,3 @@ If the player’s dual roll does not win, well, he has lost his 5 sat and can re
 
 
  
-
-Start Program
-
-```GO
-terminal> 
->> RUN go mod tidy
->> RUN make setup-docker // if you have docker running on your machine
-
-for local database, set up postgres
-
-Port = 4300
-USER=root 
-PASSWORD=root 
-DATABASE=dice_game
-
-//on the terminal run 
-
->> make setup-air
->>  migrate-up
->> make air // to run with air
-
-OR 
-
->> go run main.go
-```
