@@ -51,8 +51,8 @@ Start Program
 
 ```GO
 terminal> 
->> RUN go mod tidy
->> RUN make setup-docker // if you have docker running on your machine
+>> go mod tidy
+>> make setup-docker // if you have docker running on your machine
 
 for local database, set up postgres
 
