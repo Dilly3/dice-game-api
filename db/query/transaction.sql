@@ -1,8 +1,8 @@
 -- name: CreateTransaction :one
 INSERT INTO transactions (
-    user_id, amount, transaction_type, username
+    user_id, amount, balance , transaction_type, username
 ) VALUES (
-  $1, $2 , $3 , $4
+  $1, $2 , $3 , $4 , $5
 )
 RETURNING *;
 
@@ -13,4 +13,12 @@ AND transaction_type = $2;
 
 -- name: GetTransactionsByUsername :many
 SELECT * FROM transactions
+WHERE username = $1
+ORDER BY created_at DESC;
+
+
+-- name: UpdateTransaction :exec
+UPDATE transactions
+  set balance = $2 ,
+  amount = $3
 WHERE username = $1;

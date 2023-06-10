@@ -13,6 +13,7 @@ type Transaction struct {
 	UserID          int64     `json:"user_id"`
 	Username        string    `json:"username"`
 	Amount          int32     `json:"amount"`
+	Balance         int32     `json:"balance"`
 	TransactionType string    `json:"transaction_type"`
 	CreatedAt       time.Time `json:"created_at"`
 }

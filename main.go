@@ -64,6 +64,9 @@ func main() {
 		os.Exit(1)
 	case sig := <-c:
 		log.Printf("received signal %s", sig)
-		os.Exit(1)
+		<-time.After(time.Second * 1)
+		log.Printf("gracefully shutting down server...")
+		<-time.After(time.Second * 1)
+		os.Exit(0)
 	}
 }
