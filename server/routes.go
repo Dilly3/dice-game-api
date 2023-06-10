@@ -4,6 +4,7 @@ import (
 	db "github.com/dilly3/dice-game-api/db/sqlc"
 	"github.com/dilly3/dice-game-api/service"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 type Server struct {
@@ -22,6 +23,11 @@ func Setup(store db.Store) Handler {
 func NewServer(h Handler) Server {
 
 	app := fiber.New()
+	app.Use(logger.New(logger.Config{
+		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
+		TimeFormat: "02-Jan-2006",
+		TimeZone:   "America/New_York",
+	}))
 
 	v1 := app.Group("api/v1")
 	v1.Post("/register", h.Register())
