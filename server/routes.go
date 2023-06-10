@@ -25,8 +25,8 @@ func NewServer(h Handler) Server {
 	app := fiber.New()
 	app.Use(logger.New(logger.Config{
 		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
-		TimeFormat: "02-Jan-2006",
-		TimeZone:   "America/New_York",
+		TimeFormat: "02-Jan-2006 15:04:05",
+		TimeZone:   "GMT+1",
 	}))
 
 	v1 := app.Group("api/v1")
