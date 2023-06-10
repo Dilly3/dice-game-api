@@ -13,6 +13,7 @@ CREATE TABLE "transactions" (
   "user_id" bigint NOT NULL,
   "username" varchar(20) NOT NULL,
   "amount" int NOT NULL,
+  "balance" int NOT NULL,
   "transaction_type" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );

@@ -11,16 +11,17 @@ import (
 
 const createTransaction = `-- name: CreateTransaction :one
 INSERT INTO transactions (
-    user_id, amount, transaction_type, username
+    user_id, amount, balance , transaction_type, username
 ) VALUES (
-  $1, $2 , $3 , $4
+  $1, $2 , $3 , $4 , $5
 )
-RETURNING id, user_id, username, amount, transaction_type, created_at
+RETURNING id, user_id, username, amount, balance, transaction_type, created_at
 `
 
 type CreateTransactionParams struct {
 	UserID          int64  `json:"user_id"`
 	Amount          int32  `json:"amount"`
+	Balance         int32  `json:"balance"`
 	TransactionType string `json:"transaction_type"`
 	Username        string `json:"username"`
 }
@@ -29,6 +30,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	row := q.db.QueryRowContext(ctx, createTransaction,
 		arg.UserID,
 		arg.Amount,
+		arg.Balance,
 		arg.TransactionType,
 		arg.Username,
 	)
@@ -38,6 +40,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		&i.UserID,
 		&i.Username,
 		&i.Amount,
+		&i.Balance,
 		&i.TransactionType,
 		&i.CreatedAt,
 	)
@@ -45,7 +48,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 }
 
 const getTransaction = `-- name: GetTransaction :one
-SELECT id, user_id, username, amount, transaction_type, created_at FROM transactions
+SELECT id, user_id, username, amount, balance, transaction_type, created_at FROM transactions
 WHERE user_id = $1
 AND transaction_type = $2
 `
@@ -63,6 +66,7 @@ func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) 
 		&i.UserID,
 		&i.Username,
 		&i.Amount,
+		&i.Balance,
 		&i.TransactionType,
 		&i.CreatedAt,
 	)
@@ -70,8 +74,9 @@ func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) 
 }
 
 const getTransactionsByUsername = `-- name: GetTransactionsByUsername :many
-SELECT id, user_id, username, amount, transaction_type, created_at FROM transactions
+SELECT id, user_id, username, amount, balance, transaction_type, created_at FROM transactions
 WHERE username = $1
+ORDER BY created_at DESC
 `
 
 func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string) ([]Transaction, error) {
@@ -88,6 +93,7 @@ func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string
 			&i.UserID,
 			&i.Username,
 			&i.Amount,
+			&i.Balance,
 			&i.TransactionType,
 			&i.CreatedAt,
 		); err != nil {
@@ -102,4 +108,22 @@ func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTransaction = `-- name: UpdateTransaction :exec
+UPDATE transactions
+  set balance = $2 ,
+  amount = $3
+WHERE username = $1
+`
+
+type UpdateTransactionParams struct {
+	Username string `json:"username"`
+	Balance  int32  `json:"balance"`
+	Amount   int32  `json:"amount"`
+}
+
+func (q *Queries) UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) error {
+	_, err := q.db.ExecContext(ctx, updateTransaction, arg.Username, arg.Balance, arg.Amount)
+	return err
 }

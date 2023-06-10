@@ -21,6 +21,7 @@ type Querier interface {
 	GetWalletByUsername(ctx context.Context, username string) (Wallet, error)
 	GetWalletByUsernameForUpdate(ctx context.Context, username string) (Wallet, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) error
 	UpdateUserGameMode(ctx context.Context, arg UpdateUserGameModeParams) error
 	UpdateWallet(ctx context.Context, arg UpdateWalletParams) error
 }

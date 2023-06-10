@@ -19,3 +19,7 @@ func NewTransactionService(db db.Store) *TransactionService {
 func (s TransactionService) GetTransactionHistory(username string) ([]db.Transaction, error) {
 	return s.Database.GetTransactionsByUsername(context.Background(), username)
 }
+
+func (s TransactionService) CreateTransaction(args db.CreateTransactionParams) (db.Transaction, error) {
+	return s.Database.CreateTransaction(context.Background(), args)
+}

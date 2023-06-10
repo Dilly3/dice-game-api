@@ -78,6 +78,7 @@ func (s *PGXStore) DebitWallet(ctx context.Context, arg UpdateWalletParams) erro
 			UserID:          wal.UserID,
 			Amount:          arg.Balance,
 			TransactionType: DEBIT,
+			Balance:         wal.Balance - arg.Balance,
 			Username:        wal.Username,
 		})
 
@@ -122,8 +123,8 @@ func (s *PGXStore) CreditWallet(ctx context.Context, arg UpdateWalletParams, win
 			UserID:          wal.UserID,
 			Amount:          arg.Balance,
 			TransactionType: CREDIT,
-
-			Username: wal.Username,
+			Balance:         arg.Balance + wal.Balance,
+			Username:        wal.Username,
 		})
 
 		if err != nil {
