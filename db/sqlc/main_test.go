@@ -15,7 +15,6 @@ import (
 )
 
 var C config.Configuration
-var err error
 var StoreIntx Store
 
 func init() {

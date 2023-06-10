@@ -20,6 +20,8 @@ func CreateUser(t *testing.T) (User, Wallet) {
 	require.NotEmpty(t, user)
 	require.Equal(t, params.Firstname, user.Firstname)
 	user, err = StoreIntx.GetUserByUsername(context.Background(), user.Username)
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
 	wallet, err := StoreIntx.CreateWallet(context.Background(), CreateWalletParams{
 		UserID:   user.ID,
 		Username: user.Username,
