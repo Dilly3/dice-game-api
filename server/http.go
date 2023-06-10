@@ -250,7 +250,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 				return c.JSON(fiber.Map{"message": err.Error()})
 			}
 
-			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 credits", "result": res})
+			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 sats", "result": res})
 		}
 		return c.JSON(fiber.Map{"message": "you lost", "result": res})
 
