@@ -2,6 +2,8 @@
 
 A Dice game api that you will enjoy. roll and win
 
+Postman documentation https://documenter.getpostman.com/view/14213539/2s93sc4CnB
+
 
 <br>
 
