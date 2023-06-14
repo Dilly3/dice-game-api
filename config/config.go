@@ -41,13 +41,23 @@ func RollDice() (*RollResult, error) {
 		return rollResult, fmt.Errorf("%s", "there is no game in session")
 	}
 
-	num := rand.Int31n(6) + 1
-	ConfigTx.RollNumber1 = num
-	rollResult.RollNumber1 = num
-	num2 := rand.Int31n(6) + 1
-	ConfigTx.RollNumber2 = num2
-	rollResult.RollNumber2 = num2
-	rollResult.LuckyNumber = ConfigTx.LuckyNumber
+	if ConfigTx.RollNumber1 == 0 {
+		num := rand.Int31n(6) + 1
+		ConfigTx.RollNumber1 = num
+		rollResult.RollNumber1 = num
+		rollResult.LuckyNumber = ConfigTx.LuckyNumber
+		return rollResult, nil
+
+	}
+
+	if ConfigTx.RollNumber1 != 0 {
+
+		num2 := rand.Int31n(6) + 1
+		ConfigTx.RollNumber2 = num2
+		rollResult.RollNumber2 = num2
+		rollResult.RollNumber1 = ConfigTx.RollNumber1
+		rollResult.LuckyNumber = ConfigTx.LuckyNumber
+	}
 
 	return rollResult, nil
 

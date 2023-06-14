@@ -129,7 +129,9 @@ func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
 
 		}
 
-		return c.JSON(fiber.Map{"balance": bal, "assets": assts})
+		strbal := fmt.Sprintf("%d", bal)
+
+		return c.JSON(fiber.Map{"balance": strbal, "assets": assts})
 	}
 }
 
@@ -260,19 +262,21 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "game not in session, start game first"})
 		}
 
-		err := h.userService.DebitWallet(user, 5)
+		if config.ConfigTx.RollNumber1 == 0 {
+			err := h.userService.DebitWallet(user, 5)
 
-		if err != nil && err.Error() == "sql: no rows in result set" {
-			c.SendStatus(fiber.StatusBadRequest)
-			return c.JSON(fiber.Map{"message": "user not available"})
+			if err != nil && err.Error() == "sql: no rows in result set" {
+				c.SendStatus(fiber.StatusBadRequest)
+				return c.JSON(fiber.Map{"message": "user not available"})
 
+			}
+			if err != nil {
+				c.SendStatus(fiber.StatusInternalServerError)
+				return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
+
+			}
 		}
 
-		if err != nil {
-			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
-
-		}
 		// roll dice
 		res, err := config.RollDice()
 
@@ -280,14 +284,20 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 
 			return c.JSON(fiber.Map{"message": err.Error()})
 		}
-		if res.RollNumber1+res.RollNumber2 == config.ConfigTx.LuckyNumber {
+
+		if config.ConfigTx.RollNumber2 == 0 {
+			return c.JSON(fiber.Map{"message": "roll dice again", "result": res})
+		}
+
+		if config.ConfigTx.RollNumber2 != 0 && res.RollNumber1+res.RollNumber2 == config.ConfigTx.LuckyNumber {
 			err := h.userService.CreditWalletForWin(user, 10)
 			if err != nil {
 				return c.JSON(fiber.Map{"message": err.Error()})
 			}
-
 			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 sats", "result": res})
 		}
+		config.ConfigTx.RollNumber1 = 0
+		config.ConfigTx.RollNumber2 = 0
 		return c.JSON(fiber.Map{"message": "you lost", "result": res})
 
 	}
