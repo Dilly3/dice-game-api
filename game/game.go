@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +20,8 @@ func RollDice1(c *fiber.Ctx) error {
 	num1 := rand.Int31n(6) + 1
 	GameConfig.RollNumber1 = num1
 	c.JSON(&fiber.Map{
-		"rollNumber1": num1,
+		"Roll1":   num1,
+		"message": fmt.Sprintf("you need %d to win", GameConfig.LuckyNumber-num1),
 	})
 	return nil
 }

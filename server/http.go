@@ -282,7 +282,6 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 
 		num := game.RollDice2()
 
-		temp1 := game.GameConfig.RollNumber1
 		temp2 := game.GameConfig.RollNumber2
 
 		if game.GameConfig.RollNumber2 != 0 && game.GameConfig.RollNumber1+num == game.GameConfig.LuckyNumber {
@@ -290,12 +289,14 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			if err != nil {
 				return c.JSON(fiber.Map{"message": err.Error()})
 			}
-			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 sats", "roll1": temp1, "roll2": temp2, "jackpot": game.GameConfig.LuckyNumber})
+			game.GameConfig.RollNumber1 = 0
+			game.GameConfig.RollNumber2 = 0
+			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 sats", "roll2": temp2})
 		}
 
 		game.GameConfig.RollNumber1 = 0
 		game.GameConfig.RollNumber2 = 0
-		return c.JSON(fiber.Map{"message": "you lost", "roll1": temp1, "roll2": temp2, "jackpot": game.GameConfig.LuckyNumber})
+		return c.JSON(fiber.Map{"message": "you lost", "Roll2": temp2})
 
 	}
 
