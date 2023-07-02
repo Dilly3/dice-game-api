@@ -52,9 +52,10 @@ Start Program
 ```GO
 terminal> 
 >> go mod tidy
+
 >> make setup-docker // if you have docker running on your machine
 
-for local database, set up postgres
+for local database, set up postgres // set up postgres on your machine 
 
 Port = 4300
 USER=root 
@@ -63,13 +64,9 @@ DATABASE=dice_game
 
 //on the terminal run 
 
->> make setup-air
 >>  make migrate-up
->> make air // to run with air
+>> make run
 
-OR 
-
->> go run main.go
 ```
 
 
