@@ -48,7 +48,7 @@ If the player’s dual roll does not win, well, he has lost his 5 sat and can re
 * #### Fiber Router
 
 
-Start Program
+### Start Program
 
 ```GO
 terminal> 
@@ -65,7 +65,7 @@ DATABASE=dice_game
 
 //on the terminal run 
 
->>  make migrate-up
+>> make migrate-up
 >> make run
 
 ```
