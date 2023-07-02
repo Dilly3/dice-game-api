@@ -43,8 +43,8 @@ func main() {
 
 	<-time.After(time.Second * 2)
 	db.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
-	_ = server.Setup()
-	s := server.NewServer()
+
+	s := server.StartServer()
 
 	errs := make(chan error, 2)
 

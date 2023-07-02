@@ -23,8 +23,6 @@ const (
 	UNSUCCESSFUL = "UNSUCCESSFUL"
 )
 
-var DefaultStore Store
-
 func NewStore(db *sql.DB) Store {
 	return &PGXStore{
 		DB:      db,

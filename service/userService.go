@@ -20,6 +20,12 @@ func NewUserService(db db.Store) *UserService {
 	}
 }
 
+func SetDefaultUserService(db db.Store) {
+	DefaultUserService = &UserService{
+		Database: db,
+	}
+}
+
 func (s *UserService) CreateUser(userData db.CreateUserParams) (db.User, error) {
 
 	hashpassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)

@@ -11,15 +11,14 @@ type Server struct {
 	Router *fiber.App
 }
 
-func Setup() Handler {
+func defaultSetup() {
 
-	service.DefaultUserService = service.NewUserService(db.DefaultStore)
-
-	return NewHandler()
+	service.SetDefaultUserService(db.DefaultStore)
 }
 
-func NewServer() Server {
+func StartServer() Server {
 	h := NewHandler()
+	defaultSetup()
 	app := fiber.New()
 	app.Use(logger.New(logger.Config{
 		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
