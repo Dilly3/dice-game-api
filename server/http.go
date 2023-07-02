@@ -141,13 +141,7 @@ func (h Handler) CreditWallet() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 
-		body := &db.CreateWalletDto{}
-		if err := c.BodyParser(body); err == fiber.ErrUnprocessableEntity {
-			c.SendStatus(fiber.StatusBadRequest)
-			return c.JSON(fiber.Map{"message": "bad request"})
-		}
-
-		err := service.DefaultUserService.CreditWallet(username, int32(body.Amount))
+		err := service.DefaultUserService.CreditWallet(username, 155)
 
 		if err != nil && err.Error() == "sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
@@ -239,7 +233,7 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 		game.StartGame()
 		game.GameConfig.IsGameInSession = true
 
-		c.JSON(fiber.Map{"message": "game started, roll dice. good luck!", "debit": "20 sats", "jackpot": game.GameConfig.LuckyNumber, "isSessionActive": game.GameConfig.IsGameInSession})
+		c.JSON(fiber.Map{"message": "game started, roll dice. good luck!", "debit": "20 sats", "JackpotNumber": game.GameConfig.LuckyNumber, "isSessionActive": game.GameConfig.IsGameInSession})
 
 		return nil
 
@@ -289,7 +283,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			}
 			game.GameConfig.RollNumber1 = 0
 			game.GameConfig.RollNumber2 = 0
-			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 sats", "roll2": temp2})
+			return c.JSON(fiber.Map{"message": "WIN WIN WIN !!!!!!, You won 10 sats", "Roll-2": temp2})
 		}
 
 		game.GameConfig.RollNumber1 = 0

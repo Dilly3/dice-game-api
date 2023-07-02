@@ -19,9 +19,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var err error
-var StoreIntx db.Store
-
 func init() {
 
 	err := godotenv.Load("./.env")
@@ -39,10 +36,10 @@ func init() {
 func main() {
 
 	fmt.Println("welcome to Dice Game")
-	game.GameConfig.IsGameInSession = false
+	game.ResetGame()
 
-	<-time.After(time.Second * 2)
 	db.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
+	<-time.After(time.Second * 2)
 
 	s := server.StartServer()
 

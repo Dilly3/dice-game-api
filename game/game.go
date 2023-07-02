@@ -16,14 +16,50 @@ type Game struct {
 
 var GameConfig Game
 
+var ResetGame = func() {
+	GameConfig.IsGameInSession = false
+	GameConfig.LuckyNumber = 0
+	GameConfig.RollNumber1 = 0
+	GameConfig.RollNumber2 = 0
+}
+var resetRoll = func() {
+	GameConfig.RollNumber1 = 0
+	GameConfig.RollNumber2 = 0
+}
+
 func RollDice1(c *fiber.Ctx) error {
 	num1 := rand.Int31n(6) + 1
 	GameConfig.RollNumber1 = num1
-	c.JSON(&fiber.Map{
+
+	if num1 > GameConfig.LuckyNumber {
+		resetRoll()
+		return c.JSON(&fiber.Map{
+			"Roll-1":  num1,
+			"message": "you Lost, first roll is greater than jackpot number",
+		})
+	}
+
+	if num1 == GameConfig.LuckyNumber {
+		resetRoll()
+		return c.JSON(&fiber.Map{
+			"Roll-1":  num1,
+			"message": "you Lost, first roll is equal to jackpot number",
+		})
+	}
+
+	if GameConfig.LuckyNumber-num1 > 6 {
+		resetRoll()
+		return c.JSON(&fiber.Map{
+			"Roll-1":  num1,
+			"message": "you Lost, u need more than 6 to hit jackpot number",
+		})
+	}
+
+	return c.JSON(&fiber.Map{
 		"Roll-1":  num1,
 		"message": fmt.Sprintf("you need %d to win", GameConfig.LuckyNumber-num1),
 	})
-	return nil
+
 }
 
 func RollDice2() int32 {
