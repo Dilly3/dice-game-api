@@ -7,8 +7,8 @@ import (
 
 	"time"
 
-	"github.com/dilly3/dice-game-api/config"
 	db "github.com/dilly3/dice-game-api/db/sqlc"
+	"github.com/dilly3/dice-game-api/game"
 	"github.com/dilly3/dice-game-api/service"
 	"github.com/dilly3/dice-game-api/util"
 	"github.com/gofiber/fiber/v2"
@@ -125,7 +125,7 @@ func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
 
 		}
 
@@ -159,7 +159,7 @@ func (h Handler) CreditWallet() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
 
 		}
 
@@ -192,7 +192,7 @@ func (h Handler) DebitWallet() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
 
 		}
 
@@ -209,7 +209,7 @@ func (h Handler) GetSessionState() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 
-		return c.JSON(fiber.Map{"isSessionActive": config.ConfigTx.IsGameInSession})
+		return c.JSON(fiber.Map{"isSessionActive": game.GameConfig.IsGameInSession})
 	}
 }
 
@@ -220,7 +220,7 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
-		if config.ConfigTx.IsGameInSession {
+		if game.GameConfig.IsGameInSession {
 			return c.JSON(fiber.Map{"message": "game already in session"})
 		}
 
@@ -234,14 +234,14 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
 
 		}
 
-		config.StartGame()
-		config.ConfigTx.IsGameInSession = true
+		game.StartGame()
+		game.GameConfig.IsGameInSession = true
 
-		c.JSON(fiber.Map{"message": "game started, roll dice. good luck!", "debit": "20 sats", "luckyNumber": config.ConfigTx.LuckyNumber, "isSessionActive": config.ConfigTx.IsGameInSession})
+		c.JSON(fiber.Map{"message": "game started, roll dice. good luck!", "debit": "20 sats", "jackpot": game.GameConfig.LuckyNumber, "isSessionActive": game.GameConfig.IsGameInSession})
 
 		return nil
 
@@ -256,13 +256,13 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
-		if !config.ConfigTx.IsGameInSession {
+		if !game.GameConfig.IsGameInSession {
 			c.SendStatus(fiber.StatusBadRequest)
 
 			return c.JSON(fiber.Map{"message": "game not in session, start game first"})
 		}
 
-		if config.ConfigTx.RollNumber1 == 0 {
+		if game.GameConfig.RollNumber1 == 0 {
 			err := h.userService.DebitWallet(user, 5)
 
 			if err != nil && err.Error() == "sql: no rows in result set" {
@@ -272,33 +272,30 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			}
 			if err != nil {
 				c.SendStatus(fiber.StatusInternalServerError)
-				return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
+				return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
 
 			}
+			return game.RollDice1(c)
 		}
 
 		// roll dice
-		res, err := config.RollDice()
 
-		if err != nil {
+		num := game.RollDice2()
 
-			return c.JSON(fiber.Map{"message": err.Error()})
-		}
+		temp1 := game.GameConfig.RollNumber1
+		temp2 := game.GameConfig.RollNumber2
 
-		if config.ConfigTx.RollNumber2 == 0 {
-			return c.JSON(fiber.Map{"message": "roll dice again", "result": res})
-		}
-
-		if config.ConfigTx.RollNumber2 != 0 && res.RollNumber1+res.RollNumber2 == config.ConfigTx.LuckyNumber {
+		if game.GameConfig.RollNumber2 != 0 && game.GameConfig.RollNumber1+num == game.GameConfig.LuckyNumber {
 			err := h.userService.CreditWalletForWin(user, 10)
 			if err != nil {
 				return c.JSON(fiber.Map{"message": err.Error()})
 			}
-			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 sats", "result": res})
+			return c.JSON(fiber.Map{"WIN WIN WIN !!!!!!": "you won 10 sats", "roll1": temp1, "roll2": temp2, "jackpot": game.GameConfig.LuckyNumber})
 		}
-		config.ConfigTx.RollNumber1 = 0
-		config.ConfigTx.RollNumber2 = 0
-		return c.JSON(fiber.Map{"message": "you lost", "result": res})
+
+		game.GameConfig.RollNumber1 = 0
+		game.GameConfig.RollNumber2 = 0
+		return c.JSON(fiber.Map{"message": "you lost", "roll1": temp1, "roll2": temp2, "jackpot": game.GameConfig.LuckyNumber})
 
 	}
 
@@ -311,17 +308,12 @@ func (h Handler) StopGame() func(*fiber.Ctx) error {
 			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
-		if !config.ConfigTx.IsGameInSession {
+		if !game.GameConfig.IsGameInSession {
 			c.Status(fiber.StatusUnauthorized)
 			return c.JSON(fiber.Map{"message": "game not in session, start game first"})
 		}
 
-		config.ConfigTx.IsGameInSession = false
-		config.ConfigTx.NumberOfTrials = 0
-		config.ConfigTx.LuckyNumber = 0
-		config.ConfigTx.RollNumber1 = 0
-		config.ConfigTx.RollNumber2 = 0
-
+		game.StopGame()
 		return c.JSON(fiber.Map{"message": "game stopped"})
 	}
 }
@@ -338,12 +330,7 @@ func (h Handler) Logout() func(*fiber.Ctx) error {
 			Name:    "user",
 			Expires: time.Now().Add(-time.Hour),
 		})
-
-		config.ConfigTx.IsGameInSession = false
-		config.ConfigTx.NumberOfTrials = 0
-		config.ConfigTx.LuckyNumber = 0
-		config.ConfigTx.RollNumber1 = 0
-		config.ConfigTx.RollNumber2 = 0
+		game.StopGame()
 
 		return c.JSON(fiber.Map{"message": "logged out"})
 	}

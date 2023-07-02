@@ -11,6 +11,7 @@ import (
 
 	config "github.com/dilly3/dice-game-api/config"
 	db "github.com/dilly3/dice-game-api/db/sqlc"
+	"github.com/dilly3/dice-game-api/game"
 	"github.com/dilly3/dice-game-api/server"
 
 	"github.com/joho/godotenv"
@@ -39,7 +40,7 @@ func init() {
 func main() {
 
 	fmt.Println("welcome to Dice Game")
-	config.ConfigTx.IsGameInSession = false
+	game.GameConfig.IsGameInSession = false
 
 	<-time.After(time.Second * 2)
 	StoreIntx := db.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
