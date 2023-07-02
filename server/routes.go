@@ -8,20 +8,18 @@ import (
 )
 
 type Server struct {
-	Handler Handler
-	Router  *fiber.App
+	Router *fiber.App
 }
 
-func Setup(store db.Store) Handler {
+func Setup() Handler {
 
-	userServ := service.NewUserService(store)
-	transServ := service.NewTransactionService(store)
+	service.DefaultUserService = service.NewUserService(db.DefaultStore)
 
-	return NewHandler(transServ, userServ)
+	return NewHandler()
 }
 
-func NewServer(h Handler) Server {
-
+func NewServer() Server {
+	h := NewHandler()
 	app := fiber.New()
 	app.Use(logger.New(logger.Config{
 		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
@@ -45,5 +43,5 @@ func NewServer(h Handler) Server {
 
 	//app.Use(middleware.Timeout(60 * time.Second))
 
-	return Server{Handler: h, Router: app}
+	return Server{Router: app}
 }

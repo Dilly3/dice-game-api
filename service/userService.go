@@ -12,6 +12,8 @@ type UserService struct {
 	Database db.Store
 }
 
+var DefaultUserService *UserService
+
 func NewUserService(db db.Store) *UserService {
 	return &UserService{
 		Database: db,
@@ -112,4 +114,12 @@ func (s UserService) UpdateGameMode(username string, mode bool) error {
 	}
 
 	return nil
+}
+
+func (s UserService) GetTransactionHistory(username string) ([]db.Transaction, error) {
+	return s.Database.GetTransactionsByUsername(context.Background(), username)
+}
+
+func (s UserService) CreateTransaction(args db.CreateTransactionParams) (db.Transaction, error) {
+	return s.Database.CreateTransaction(context.Background(), args)
 }

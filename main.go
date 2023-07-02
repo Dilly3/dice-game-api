@@ -13,7 +13,6 @@ import (
 	db "github.com/dilly3/dice-game-api/db/sqlc"
 	"github.com/dilly3/dice-game-api/game"
 	"github.com/dilly3/dice-game-api/server"
-
 	"github.com/joho/godotenv"
 
 	"github.com/kelseyhightower/envconfig"
@@ -43,9 +42,9 @@ func main() {
 	game.GameConfig.IsGameInSession = false
 
 	<-time.After(time.Second * 2)
-	StoreIntx := db.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
-	h := server.Setup(StoreIntx)
-	s := server.NewServer(h)
+	db.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
+	_ = server.Setup()
+	s := server.NewServer()
 
 	errs := make(chan error, 2)
 

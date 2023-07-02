@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func StartDb(DbDriverName string, DbSourceName string) Store {
+func StartDb(DbDriverName string, DbSourceName string) {
 	dbx, err := sql.Open(DbDriverName, DbSourceName)
 
 	if err != nil {
@@ -13,6 +13,6 @@ func StartDb(DbDriverName string, DbSourceName string) Store {
 
 	}
 
-	StoreIntx := NewStore(dbx)
-	return StoreIntx
+	DefaultStore = NewStore(dbx)
+
 }

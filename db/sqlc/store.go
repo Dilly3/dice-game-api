@@ -8,7 +8,6 @@ import (
 
 type Store interface {
 	Querier
-	execTx(ctx context.Context, fn func(*Queries) error) error
 	DebitWallet(ctx context.Context, arg UpdateWalletParams) error
 	CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error
 }
@@ -23,6 +22,8 @@ const (
 	DEBIT        = "DEBIT"
 	UNSUCCESSFUL = "UNSUCCESSFUL"
 )
+
+var DefaultStore Store
 
 func NewStore(db *sql.DB) Store {
 	return &PGXStore{
