@@ -10,12 +10,13 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/dilly3/dice-game-api/config"
+	"github.com/dilly3/dice-game-api/repository"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
 var C config.Configuration
-var StoreIntx Store
+var StoreIntx repository.GameRepo
 
 func init() {
 	err := godotenv.Load("../../.env")
@@ -39,7 +40,7 @@ func TestMain(m *testing.M) {
 
 	}
 
-	StoreIntx = NewStore(dbx)
+	StoreIntx = NewPGXDB(dbx)
 
 	os.Exit(m.Run())
 }

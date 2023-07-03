@@ -39,7 +39,7 @@ func main() {
 	fmt.Println("welcome to Dice Game")
 	game.ResetGame()
 
-	repo := repository.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName, db.NewStore)
+	repo := repository.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName, db.NewPGXDB)
 	<-time.After(time.Second * 2)
 
 	s := server.StartServer(repo)

@@ -15,44 +15,30 @@ import (
 // 	CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error
 // }
 
-type PGXStore struct {
-	*Queries
-	DB *sql.DB
-}
-
 const (
 	CREDIT       = "CREDIT"
 	DEBIT        = "DEBIT"
 	UNSUCCESSFUL = "UNSUCCESSFUL"
 )
 
-type Store interface {
-	CreateTransaction(ctx context.Context, arg models.CreateTransactionParams) (models.Transaction, error)
-	CreateUser(ctx context.Context, arg models.CreateUserParams) (models.User, error)
-	CreateWallet(ctx context.Context, arg models.CreateWalletParams) (models.Wallet, error)
-	DeleteUser(ctx context.Context, username string) error
-	GetTransaction(ctx context.Context, arg models.GetTransactionParams) (models.Transaction, error)
-	GetTransactionsByUsername(ctx context.Context, username string) ([]models.Transaction, error)
-	GetUser(ctx context.Context, username string) (models.User, error)
-	GetUserByUsername(ctx context.Context, username string) (models.User, error)
-	GetUserForUpdate(ctx context.Context, username string) (models.User, error)
-	GetWalletByUsername(ctx context.Context, username string) (models.Wallet, error)
-	GetWalletByUsernameForUpdate(ctx context.Context, username string) (models.Wallet, error)
-	ListUsers(ctx context.Context, arg models.ListUsersParams) ([]models.User, error)
-	UpdateTransaction(ctx context.Context, arg models.UpdateTransactionParams) error
-	UpdateUserGameMode(ctx context.Context, arg models.UpdateUserGameModeParams) error
-	UpdateWallet(ctx context.Context, arg models.UpdateWalletParams) error
-	DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error
-	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
+// type Store interface {
+// 	Querier
+// 	DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error
+// 	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
+// }
+
+type PGXDB struct {
+	*Queries
+	DB *sql.DB
 }
 
-func NewStore(db *sql.DB) repository.GameRepo {
-	return &PGXStore{
+func NewPGXDB(db *sql.DB) repository.GameRepo {
+	return &PGXDB{
 		DB:      db,
 		Queries: New(db),
 	}
 }
-func (s *PGXStore) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (s *PGXDB) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -68,7 +54,7 @@ func (s *PGXStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	return tx.Commit()
 }
 
-func (s *PGXStore) DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error {
+func (s *PGXDB) DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error {
 
 	err1 := s.execTx(ctx, func(q *Queries) error {
 		var err error
@@ -108,7 +94,7 @@ func (s *PGXStore) DebitWallet(ctx context.Context, arg models.UpdateWalletParam
 	return err1
 }
 
-func (s *PGXStore) CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error {
+func (s *PGXDB) CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error {
 
 	err1 := s.execTx(ctx, func(q *Queries) error {
 		var err error

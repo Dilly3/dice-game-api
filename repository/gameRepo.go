@@ -28,13 +28,9 @@ type GameRepo interface {
 	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
 }
 
-// repo instance
-var DefaultRepoInstance GameRepo
-
 var StartDb = func(DbDriverName string, DbSourceName string, initdb func(*sql.DB) GameRepo) GameRepo {
 	dbx := opendb(DbDriverName, DbSourceName)
 	gamerepo := initdb(dbx)
-	//set repo instance
 	return gamerepo
 
 }
@@ -48,13 +44,5 @@ var opendb = func(DbDriverName string, DbSourceName string) *sql.DB {
 	}
 
 	return dbx
-
-}
-
-// set default repo instance
-func setRepoInstance(db GameRepo) GameRepo {
-
-	DefaultRepoInstance = db
-	return DefaultRepoInstance
 
 }
