@@ -3,22 +3,31 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/dilly3/dice-game-api/models"
 	"github.com/dilly3/dice-game-api/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
+var once sync.Once
+var DefaultGameService GameService
+
 type GameService struct {
 	Database repository.GameRepo
 }
 
-func NewGameService(db repository.GameRepo) *GameService {
-	return &GameService{
-		Database: db,
-	}
+func NewGameService(db repository.GameRepo) {
+	once.Do(func() {
+		DefaultGameService = GameService{
+			Database: db,
+		}
+	})
 }
 
+func GetGameService() GameService {
+	return DefaultGameService
+}
 func (s *GameService) CreateUser(userData models.CreateUserParams) (models.User, error) {
 
 	hashpassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)

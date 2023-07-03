@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sync"
 
 	"github.com/dilly3/dice-game-api/models"
 )
@@ -28,10 +29,20 @@ type GameRepo interface {
 	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
 }
 
+var DefaultGameRepo GameRepo
+
+var once sync.Once
+
 var StartDb = func(DbDriverName string, DbSourceName string, initdb func(*sql.DB) GameRepo) GameRepo {
 	dbx := opendb(DbDriverName, DbSourceName)
+	once.Do(func() {
+		DefaultGameRepo = initdb(dbx)
+	})
 	return initdb(dbx)
+}
 
+var GetDefaultGameRepo = func() GameRepo {
+	return DefaultGameRepo
 }
 
 var opendb = func(DbDriverName string, DbSourceName string) *sql.DB {

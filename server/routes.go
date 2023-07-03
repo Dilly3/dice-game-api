@@ -27,8 +27,8 @@ func (s *Server) Listen() error {
 
 func (s *Server) StartServer() {
 	//  start user service with default repo instance
-	userserv := service.NewGameService(s.Repo)
-	h := NewHandler(*userserv)
+	service.NewGameService(s.Repo)
+	h := NewHandler(service.GetGameService())
 
 	s.Router.Use(logger.New(logger.Config{
 		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
