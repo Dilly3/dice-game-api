@@ -19,6 +19,10 @@ var ResetGame = func() {
 	GameConfig.RollNumber1 = 0
 	GameConfig.RollNumber2 = 0
 }
+var ResetRoll = func() {
+	GameConfig.RollNumber1 = 0
+	GameConfig.RollNumber2 = 0
+}
 
 func RollDice1() {
 	num1 := rand.Int31n(6) + 1

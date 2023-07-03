@@ -20,11 +20,6 @@ type Handler struct {
 	gameService service.GameService
 }
 
-var resetRoll = func() {
-	game.GameConfig.RollNumber1 = 0
-	game.GameConfig.RollNumber2 = 0
-}
-
 func NewHandler(userser service.GameService) Handler {
 
 	logger, err := zap.NewProduction()
@@ -278,7 +273,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			game.RollDice1()
 			num1 := game.GameConfig.RollNumber1
 			if num1 > game.GameConfig.LuckyNumber {
-				resetRoll()
+				game.ResetRoll()
 				return c.JSON(&fiber.Map{
 					"Roll-1":  num1,
 					"message": "you Lost, first roll is greater than jackpot number",
@@ -286,7 +281,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			}
 
 			if num1 == game.GameConfig.LuckyNumber {
-				resetRoll()
+				game.ResetRoll()
 				return c.JSON(&fiber.Map{
 					"Roll-1":  num1,
 					"message": "you Lost, first roll is equal to jackpot number",
@@ -294,7 +289,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			}
 
 			if game.GameConfig.LuckyNumber-num1 > 6 {
-				resetRoll()
+				game.ResetRoll()
 				return c.JSON(&fiber.Map{
 					"Roll-1":  num1,
 					"message": "you Lost, u need more than 6 to hit jackpot number",
@@ -318,11 +313,11 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			if err != nil {
 				return c.JSON(fiber.Map{"message": err.Error()})
 			}
-			resetRoll()
+			game.ResetRoll()
 			return c.JSON(fiber.Map{"message": "WIN WIN WIN !!!!!!, You won 10 sats", "Roll-2": temp2})
 		}
 
-		resetRoll()
+		game.ResetRoll()
 		return c.JSON(fiber.Map{"message": "you lost", "Roll-2": temp2})
 
 	}
