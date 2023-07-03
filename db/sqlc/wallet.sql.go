@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/dilly3/dice-game-api/models"
 )
 
 const createWallet = `-- name: CreateWallet :one
@@ -18,14 +20,11 @@ INSERT INTO wallets (
 RETURNING id, user_id, username, balance, assets, updated_at
 `
 
-type CreateWalletParams struct {
-	UserID   int64  `json:"user_id"`
-	Username string `json:"username"`
-}
 
-func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) (Wallet, error) {
+
+func (q *Queries) CreateWallet(ctx context.Context, arg models.CreateWalletParams) (models.Wallet, error) {
 	row := q.db.QueryRowContext(ctx, createWallet, arg.UserID, arg.Username)
-	var i Wallet
+	var i models.Wallet
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -42,9 +41,9 @@ SELECT id, user_id, username, balance, assets, updated_at FROM wallets
 WHERE username = $1
 `
 
-func (q *Queries) GetWalletByUsername(ctx context.Context, username string) (Wallet, error) {
+func (q *Queries) GetWalletByUsername(ctx context.Context, username string) (models.Wallet, error) {
 	row := q.db.QueryRowContext(ctx, getWalletByUsername, username)
-	var i Wallet
+	var i models.Wallet
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -62,9 +61,9 @@ WHERE username = $1
 FOR UPDATE
 `
 
-func (q *Queries) GetWalletByUsernameForUpdate(ctx context.Context, username string) (Wallet, error) {
+func (q *Queries) GetWalletByUsernameForUpdate(ctx context.Context, username string) (models.Wallet, error) {
 	row := q.db.QueryRowContext(ctx, getWalletByUsernameForUpdate, username)
-	var i Wallet
+	var i models.Wallet
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -82,12 +81,9 @@ UPDATE wallets
 WHERE username = $1
 `
 
-type UpdateWalletParams struct {
-	Username string `json:"username"`
-	Balance  int32  `json:"balance"`
-}
 
-func (q *Queries) UpdateWallet(ctx context.Context, arg UpdateWalletParams) error {
+
+func (q *Queries) UpdateWallet(ctx context.Context, arg models.UpdateWalletParams) error {
 	_, err := q.db.ExecContext(ctx, updateWallet, arg.Username, arg.Balance)
 	return err
 }

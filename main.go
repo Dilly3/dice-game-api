@@ -12,6 +12,7 @@ import (
 	config "github.com/dilly3/dice-game-api/config"
 	db "github.com/dilly3/dice-game-api/db/sqlc"
 	"github.com/dilly3/dice-game-api/game"
+	"github.com/dilly3/dice-game-api/repository"
 	"github.com/dilly3/dice-game-api/server"
 	"github.com/joho/godotenv"
 
@@ -38,10 +39,10 @@ func main() {
 	fmt.Println("welcome to Dice Game")
 	game.ResetGame()
 
-	db.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
+	repo := repository.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName, db.NewStore)
 	<-time.After(time.Second * 2)
 
-	s := server.StartServer()
+	s := server.StartServer(repo)
 
 	errs := make(chan error, 2)
 

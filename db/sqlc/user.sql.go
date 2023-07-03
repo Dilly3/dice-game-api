@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/dilly3/dice-game-api/models"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -18,21 +20,16 @@ INSERT INTO users (
 RETURNING id, firstname, lastname, username, game_mode, password, created_at
 `
 
-type CreateUserParams struct {
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-}
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+
+func (q *Queries) CreateUser(ctx context.Context, arg models.CreateUserParams) (models.User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.Firstname,
 		arg.Lastname,
 		arg.Username,
 		arg.Password,
 	)
-	var i User
+	var i models.User
 	err := row.Scan(
 		&i.ID,
 		&i.Firstname,
@@ -61,9 +58,9 @@ WHERE username = $1
 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
+func (q *Queries) GetUser(ctx context.Context, username string) (models.User, error) {
 	row := q.db.QueryRowContext(ctx, getUser, username)
-	var i User
+	var i models.User
 	err := row.Scan(
 		&i.ID,
 		&i.Firstname,
@@ -81,9 +78,9 @@ SELECT id, firstname, lastname, username, game_mode, password, created_at FROM u
 WHERE username = $1
 `
 
-func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
-	var i User
+	var i models.User
 	err := row.Scan(
 		&i.ID,
 		&i.Firstname,
@@ -102,9 +99,9 @@ WHERE username = $1
 FOR UPDATE
 `
 
-func (q *Queries) GetUserForUpdate(ctx context.Context, username string) (User, error) {
+func (q *Queries) GetUserForUpdate(ctx context.Context, username string) (models.User, error) {
 	row := q.db.QueryRowContext(ctx, getUserForUpdate, username)
-	var i User
+	var i models.User
 	err := row.Scan(
 		&i.ID,
 		&i.Firstname,
@@ -124,20 +121,17 @@ LIMIT $1
 OFFSET $2
 `
 
-type ListUsersParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
 
-func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
+
+func (q *Queries) ListUsers(ctx context.Context, arg models.ListUsersParams) ([]models.User, error) {
 	rows, err := q.db.QueryContext(ctx, listUsers, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []models.User
 	for rows.Next() {
-		var i User
+		var i models.User
 		if err := rows.Scan(
 			&i.ID,
 			&i.Firstname,
@@ -166,12 +160,9 @@ UPDATE users
 WHERE username = $1
 `
 
-type UpdateUserGameModeParams struct {
-	Username string `json:"username"`
-	GameMode bool   `json:"game_mode"`
-}
 
-func (q *Queries) UpdateUserGameMode(ctx context.Context, arg UpdateUserGameModeParams) error {
+
+func (q *Queries) UpdateUserGameMode(ctx context.Context, arg models.UpdateUserGameModeParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserGameMode, arg.Username, arg.GameMode)
 	return err
 }

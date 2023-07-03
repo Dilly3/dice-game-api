@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/dilly3/dice-game-api/models"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,7 @@ func TestGetBalance(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, wallet.Balance, int32(0))
 
-	StoreIntx.UpdateWallet(context.Background(), UpdateWalletParams{
+	StoreIntx.UpdateWallet(context.Background(), models.UpdateWalletParams{
 		Username: user.Username,
 		Balance:  100,
 	})

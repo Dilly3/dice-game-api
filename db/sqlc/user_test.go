@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/dilly3/dice-game-api/models"
 	"github.com/dilly3/dice-game-api/util"
 	"github.com/stretchr/testify/require"
 )
 
-func CreateUser(t *testing.T) (User, Wallet) {
-	params := CreateUserParams{
+func CreateUser(t *testing.T) (models.User, models.Wallet) {
+	params := models.CreateUserParams{
 		Firstname: util.GenerateRandomString(8),
 		Lastname:  util.GenerateRandomString(9),
 		Username:  util.GenerateRandomUsername(5),
@@ -22,7 +23,7 @@ func CreateUser(t *testing.T) (User, Wallet) {
 	user, err = StoreIntx.GetUserByUsername(context.Background(), user.Username)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
-	wallet, err := StoreIntx.CreateWallet(context.Background(), CreateWalletParams{
+	wallet, err := StoreIntx.CreateWallet(context.Background(), models.CreateWalletParams{
 		UserID:   user.ID,
 		Username: user.Username,
 	})

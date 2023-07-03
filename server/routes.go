@@ -1,7 +1,7 @@
 package server
 
 import (
-	db "github.com/dilly3/dice-game-api/db/sqlc"
+	"github.com/dilly3/dice-game-api/repository"
 	"github.com/dilly3/dice-game-api/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -11,14 +11,10 @@ type Server struct {
 	Router *fiber.App
 }
 
-func defaultSetup() {
-
-	service.SetDefaultUserService(db.DefaultStore)
-}
-
-func StartServer() Server {
-	h := NewHandler()
-	defaultSetup()
+func StartServer(repo repository.GameRepo) Server {
+	//  start user service with default repo instance
+	userserv := service.NewGameService(repo)
+	h := NewHandler(*userserv)
 	app := fiber.New()
 	app.Use(logger.New(logger.Config{
 		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
