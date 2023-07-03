@@ -30,8 +30,7 @@ type GameRepo interface {
 
 var StartDb = func(DbDriverName string, DbSourceName string, initdb func(*sql.DB) GameRepo) GameRepo {
 	dbx := opendb(DbDriverName, DbSourceName)
-	gamerepo := initdb(dbx)
-	return gamerepo
+	return initdb(dbx)
 
 }
 
