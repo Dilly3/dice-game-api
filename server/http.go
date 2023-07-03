@@ -267,28 +267,13 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 				return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
 
 			}
+			// roll dice 1
 			return game.RollDice1(c)
 		}
 
-		// roll dice
+		// roll dice 2
 
-		num := game.RollDice2()
-
-		temp2 := game.GameConfig.RollNumber2
-
-		if game.GameConfig.RollNumber2 != 0 && game.GameConfig.RollNumber1+num == game.GameConfig.LuckyNumber {
-			err := service.DefaultUserService.CreditWalletForWin(user, 10)
-			if err != nil {
-				return c.JSON(fiber.Map{"message": err.Error()})
-			}
-			game.GameConfig.RollNumber1 = 0
-			game.GameConfig.RollNumber2 = 0
-			return c.JSON(fiber.Map{"message": "WIN WIN WIN !!!!!!, You won 10 sats", "Roll-2": temp2})
-		}
-
-		game.GameConfig.RollNumber1 = 0
-		game.GameConfig.RollNumber2 = 0
-		return c.JSON(fiber.Map{"message": "you lost", "Roll-2": temp2})
+		return game.RollDice2(c, user)
 
 	}
 

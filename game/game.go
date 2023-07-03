@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/dilly3/dice-game-api/service"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -62,11 +63,25 @@ func RollDice1(c *fiber.Ctx) error {
 
 }
 
-func RollDice2() int32 {
+func RollDice2(c *fiber.Ctx, user string) error {
 	num2 := rand.Int31n(6) + 1
 	GameConfig.RollNumber2 = num2
 
-	return num2
+	temp2 := GameConfig.RollNumber2
+
+	if GameConfig.RollNumber2 != 0 && GameConfig.RollNumber1+num2 == GameConfig.LuckyNumber {
+		err := service.DefaultUserService.CreditWalletForWin(user, 10)
+		if err != nil {
+			return c.JSON(fiber.Map{"message": err.Error()})
+		}
+		GameConfig.RollNumber1 = 0
+		GameConfig.RollNumber2 = 0
+		return c.JSON(fiber.Map{"message": "WIN WIN WIN !!!!!!, You won 10 sats", "Roll-2": temp2})
+	}
+
+	GameConfig.RollNumber1 = 0
+	GameConfig.RollNumber2 = 0
+	return c.JSON(fiber.Map{"message": "you lost", "Roll-2": temp2})
 }
 
 func StartGame() {
