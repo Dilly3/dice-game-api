@@ -9,20 +9,34 @@ import (
 
 type Server struct {
 	Router *fiber.App
+	Port   string
+	Repo   repository.GameRepo
 }
 
-func StartServer(repo repository.GameRepo) Server {
+func NewServer(port string, repo repository.GameRepo) *Server {
+	return &Server{
+		Router: fiber.New(),
+		Port:   port,
+		Repo:   repo,
+	}
+}
+
+func (s *Server) Listen() error {
+	return s.Router.Listen(s.Port)
+}
+
+func (s *Server) StartServer() {
 	//  start user service with default repo instance
-	userserv := service.NewGameService(repo)
+	userserv := service.NewGameService(s.Repo)
 	h := NewHandler(*userserv)
-	app := fiber.New()
-	app.Use(logger.New(logger.Config{
+
+	s.Router.Use(logger.New(logger.Config{
 		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
 		TimeFormat: "02-Jan-2006 15:04:05",
 		TimeZone:   "GMT+1",
 	}))
 
-	v1 := app.Group("api/v1")
+	v1 := s.Router.Group("api/v1")
 	v1.Post("/register", h.Register())
 	v1.Post("/login", h.Login())
 	v1.Get("/all", h.GetUsers())
@@ -37,5 +51,4 @@ func StartServer(repo repository.GameRepo) Server {
 
 	//app.Use(middleware.Timeout(60 * time.Second))
 
-	return Server{Router: app}
 }

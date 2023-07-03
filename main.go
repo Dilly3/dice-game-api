@@ -42,13 +42,15 @@ func main() {
 	repo := repository.StartDb(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName, db.NewPGXDB)
 	<-time.After(time.Second * 2)
 
-	s := server.StartServer(repo)
+	s := server.NewServer(":8000", repo)
+
+	s.StartServer()
 
 	errs := make(chan error, 2)
 
 	go func() {
 
-		errs <- s.Router.Listen(":8000")
+		errs <- s.Listen()
 	}()
 	c := make(chan os.Signal, 1)
 	go func() {
