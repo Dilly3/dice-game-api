@@ -16,6 +16,7 @@ import (
 
 var C config.Configuration
 var StoreIntx repository.GameRepo
+var err error
 
 func init() {
 	err := godotenv.Load("../../.env")
@@ -32,7 +33,10 @@ func init() {
 
 func TestMain(m *testing.M) {
 
-	StoreIntx = NewPGXDB(C.DbDriverName, C.DbDataSourceName)
+	StoreIntx, err = NewPGXDB(C.DbDriverName, C.DbDataSourceName)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	os.Exit(m.Run())
 }

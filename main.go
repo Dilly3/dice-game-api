@@ -39,8 +39,11 @@ func main() {
 	fmt.Println("welcome to Dice Game")
 	game.ResetGame()
 
-	db := db.NewPGXDB(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
+	db, err := db.NewPGXDB(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
 	<-time.After(time.Second * 2)
+	if err != nil {
+		log.Fatal(err)
+	}
 	app := fiber.New()
 	s := server.NewServer(":8000", db, app)
 

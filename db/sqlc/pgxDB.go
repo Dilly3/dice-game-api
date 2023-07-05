@@ -9,33 +9,20 @@ import (
 	"github.com/dilly3/dice-game-api/repository"
 )
 
-// type Store interface {
-// 	Querier
-// 	DebitWallet(ctx context.Context, arg UpdateWalletParams) error
-// 	CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error
-// }
-
 const (
 	CREDIT       = "CREDIT"
 	DEBIT        = "DEBIT"
 	UNSUCCESSFUL = "UNSUCCESSFUL"
 )
 
-// type Store interface {
-// 	Querier
-// 	DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error
-// 	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
-// }
-
-type PGXDB struct {
-	*Queries
-	DB *sql.DB
-}
-
 type PGStore interface {
 	Querier
 	DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error
 	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
+}
+type PGXDB struct {
+	*Queries
+	DB *sql.DB
 }
 
 func newPGXDB(db *sql.DB) PGStore {
@@ -45,12 +32,17 @@ func newPGXDB(db *sql.DB) PGStore {
 	}
 }
 
-func NewPGXDB(drivername, sourcename string) repository.GameRepo {
+func NewPGXDB(drivername, sourcename string) (repository.GameRepo, error) {
 	db, err := sql.Open(drivername, sourcename)
 	if err != nil {
-		panic(fmt.Errorf("cant open database :  %+v", err))
+		return nil, fmt.Errorf("cant open database :  %+v", err)
 	}
-	return newPGXDB(db)
+	err = db.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("cant ping database :  %+v", err)
+	}
+
+	return newPGXDB(db), nil
 }
 
 func (s *PGXDB) execTx(ctx context.Context, fn func(*Queries) error) error {
