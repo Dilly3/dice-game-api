@@ -2,8 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"sync"
 
 	"github.com/dilly3/dice-game-api/models"
@@ -33,26 +31,20 @@ var DefaultGameRepo GameRepo
 
 var once sync.Once
 
-var StartDb = func(DbDriverName string, DbSourceName string, initdb func(*sql.DB) GameRepo) GameRepo {
-	dbx := opendb(DbDriverName, DbSourceName)
+var StartDb = func(DbDriverName string, DbSourceName string, initdb func(string, string) GameRepo) {
+
+	repo := initdb(DbDriverName, DbSourceName)
+
 	once.Do(func() {
-		DefaultGameRepo = initdb(dbx)
+		setDefaultGameRepo(repo)
 	})
-	return initdb(dbx)
+}
+
+var setDefaultGameRepo = func(db GameRepo) {
+	DefaultGameRepo = db
+
 }
 
 var GetDefaultGameRepo = func() GameRepo {
 	return DefaultGameRepo
-}
-
-var opendb = func(DbDriverName string, DbSourceName string) *sql.DB {
-	dbx, err := sql.Open(DbDriverName, DbSourceName)
-
-	if err != nil {
-		panic(fmt.Errorf("%s : %v", "cant connect to db", err))
-
-	}
-
-	return dbx
-
 }

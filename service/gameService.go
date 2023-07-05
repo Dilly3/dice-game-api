@@ -17,16 +17,19 @@ type GameService struct {
 	Database repository.GameRepo
 }
 
-func NewGameService(db repository.GameRepo) {
-	once.Do(func() {
-		DefaultGameService = GameService{
-			Database: db,
-		}
-	})
+func newGameService(db repository.GameRepo) GameService {
+
+	return GameService{
+		Database: db,
+	}
 }
 
-func GetGameService() GameService {
+func GetGameService(db repository.GameRepo) GameService {
+	once.Do(func() {
+		DefaultGameService = newGameService(db)
+	})
 	return DefaultGameService
+
 }
 func (s *GameService) CreateUser(userData models.CreateUserParams) (models.User, error) {
 

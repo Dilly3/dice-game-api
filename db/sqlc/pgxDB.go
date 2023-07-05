@@ -32,12 +32,27 @@ type PGXDB struct {
 	DB *sql.DB
 }
 
-func NewPGXDB(db *sql.DB) repository.GameRepo {
+type PGStore interface {
+	Querier
+	DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error
+	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
+}
+
+func newPGXDB(db *sql.DB) PGStore {
 	return &PGXDB{
 		DB:      db,
 		Queries: New(db),
 	}
 }
+
+func NewPGXDB(drivername, sourcename string) repository.GameRepo {
+	db, err := sql.Open(drivername, sourcename)
+	if err != nil {
+		panic(fmt.Errorf("cant open database :  %+v", err))
+	}
+	return newPGXDB(db)
+}
+
 func (s *PGXDB) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {

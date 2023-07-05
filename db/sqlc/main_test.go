@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -33,14 +32,7 @@ func init() {
 
 func TestMain(m *testing.M) {
 
-	dbx, err := sql.Open(C.DbDriverName, C.DbDataSourceName)
-
-	if err != nil {
-		panic(fmt.Errorf("%s : %v", "cant connect to db", err))
-
-	}
-
-	StoreIntx = NewPGXDB(dbx)
+	StoreIntx = NewPGXDB(C.DbDriverName, C.DbDataSourceName)
 
 	os.Exit(m.Run())
 }
