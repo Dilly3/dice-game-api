@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"sync"
 
 	"github.com/dilly3/dice-game-api/models"
 )
@@ -25,26 +24,4 @@ type GameRepo interface {
 	UpdateWallet(ctx context.Context, arg models.UpdateWalletParams) error
 	DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error
 	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
-}
-
-var DefaultGameRepo GameRepo
-
-var once sync.Once
-
-var StartDb = func(DbDriverName string, DbSourceName string, initdb func(string, string) GameRepo) {
-
-	repo := initdb(DbDriverName, DbSourceName)
-
-	once.Do(func() {
-		setDefaultGameRepo(repo)
-	})
-}
-
-var setDefaultGameRepo = func(db GameRepo) {
-	DefaultGameRepo = db
-
-}
-
-var GetDefaultGameRepo = func() GameRepo {
-	return DefaultGameRepo
 }

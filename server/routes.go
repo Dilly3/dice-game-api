@@ -13,9 +13,9 @@ type Server struct {
 	Repo   repository.GameRepo
 }
 
-func NewServer(port string, repo repository.GameRepo) *Server {
+func NewServer(port string, repo repository.GameRepo, router *fiber.App) *Server {
 	return &Server{
-		Router: fiber.New(),
+		Router: router,
 		Port:   port,
 		Repo:   repo,
 	}
