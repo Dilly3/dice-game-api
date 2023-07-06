@@ -3,37 +3,19 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"time"
 
 	"github.com/dilly3/dice-game-api/game"
 	"github.com/dilly3/dice-game-api/models"
-	"github.com/dilly3/dice-game-api/service"
 	"github.com/dilly3/dice-game-api/util"
 	"github.com/gofiber/fiber/v2"
-	"go.uber.org/zap"
 )
 
-type Handler struct {
-	Logger      zap.Logger
-	gameService service.GameService
-}
-
-func NewHandler(userser service.GameService) Handler {
-
-	logger, err := zap.NewProduction()
-	if err != nil {
-		fmt.Printf("error setting up Logger =>%v\n", err)
-		log.Fatal(err)
-	}
-	return Handler{Logger: *logger, gameService: userser}
-}
-
-func (h Handler) GetUsers() func(*fiber.Ctx) error {
+func (s *Server) GetUsers() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
-		users, err := h.gameService.GetAllUsers(context.Background(), models.ListUsersParams{Limit: 10, Offset: 0})
+		users, err := s.gameService.GetAllUsers(context.Background(), models.ListUsersParams{Limit: 10, Offset: 0})
 
 		if err != nil {
 			return err
@@ -43,7 +25,7 @@ func (h Handler) GetUsers() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) Register() func(*fiber.Ctx) error {
+func (s *Server) Register() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := &models.RegisterUserDto{}
 		if err := c.BodyParser(user); err == fiber.ErrUnprocessableEntity {
@@ -51,7 +33,7 @@ func (h Handler) Register() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "bad request"})
 		}
 
-		dbuser, _ := h.gameService.GetUserByUsername(context.Background(), user.Username)
+		dbuser, _ := s.gameService.GetUserByUsername(context.Background(), user.Username)
 		if dbuser.ID != 0 {
 			c.Status(fiber.StatusBadRequest)
 			return c.JSON(fiber.Map{"message": "username already exists"})
@@ -59,10 +41,10 @@ func (h Handler) Register() func(*fiber.Ctx) error {
 
 		if user.Password != user.ConfirmPassword {
 			c.Status(fiber.StatusBadRequest)
-			return c.JSON(fiber.Map{"message": "passwords do not match"})
+			return c.JSON(fiber.Map{"message": "passwords do not matcs"})
 		}
 
-		dbuser, err := h.gameService.CreateUser(models.CreateUserParams{
+		dbuser, err := s.gameService.CreateUser(models.CreateUserParams{
 			Firstname: user.Firstname,
 			Lastname:  user.Lastname,
 			Username:  user.Username,
@@ -79,7 +61,7 @@ func (h Handler) Register() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) Login() func(*fiber.Ctx) error {
+func (s *Server) Login() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loginbody := &models.LoginDto{}
 		if err := c.BodyParser(loginbody); err == fiber.ErrUnprocessableEntity {
@@ -87,8 +69,8 @@ func (h Handler) Login() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "bad login credentials"})
 		}
 		dbuser := models.User{}
-		// Get first matched record
-		dbuser, err := h.gameService.GetUserByUsername(context.Background(), loginbody.Username)
+		// Get first matcsed record
+		dbuser, err := s.gameService.GetUserByUsername(context.Background(), loginbody.Username)
 		if err != nil {
 			c.Status(fiber.StatusBadRequest)
 			return c.JSON(fiber.Map{"message": "email or password incorrect"})
@@ -107,7 +89,7 @@ func (h Handler) Login() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
+func (s *Server) GetWalletBalance() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		username := c.Cookies("user")
 		if username == "" {
@@ -115,7 +97,7 @@ func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 
-		bal, assts, err := h.gameService.GetWalletBalance(username)
+		bal, assts, err := s.gameService.GetWalletBalance(username)
 
 		if err != nil && err.Error() == "cant get wallet : sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
@@ -125,7 +107,7 @@ func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal *Server error :" + err.Error()})
 
 		}
 
@@ -135,7 +117,7 @@ func (h Handler) GetWalletBalance() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) CreditWallet() func(*fiber.Ctx) error {
+func (s *Server) CreditWallet() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		username := c.Cookies("user")
 		if username == "" {
@@ -143,7 +125,7 @@ func (h Handler) CreditWallet() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
 
-		err := h.gameService.CreditWallet(username, 155)
+		err := s.gameService.CreditWallet(username, 155)
 
 		if err != nil && err.Error() == "sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
@@ -153,7 +135,7 @@ func (h Handler) CreditWallet() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal *Server error :" + err.Error()})
 
 		}
 
@@ -161,7 +143,7 @@ func (h Handler) CreditWallet() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) DebitWallet() func(*fiber.Ctx) error {
+func (s *Server) DebitWallet() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		username := c.Cookies("user")
@@ -176,7 +158,7 @@ func (h Handler) DebitWallet() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "bad request"})
 		}
 
-		err := h.gameService.DebitWallet(username, int32(body.Amount))
+		err := s.gameService.DebitWallet(username, int32(body.Amount))
 
 		if err != nil && err.Error() == "sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
@@ -186,7 +168,7 @@ func (h Handler) DebitWallet() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal *Server error :" + err.Error()})
 
 		}
 
@@ -194,7 +176,7 @@ func (h Handler) DebitWallet() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) GetSessionState() func(*fiber.Ctx) error {
+func (s *Server) GetSessionState() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		username := c.Cookies("user")
@@ -207,7 +189,7 @@ func (h Handler) GetSessionState() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) StartGame() func(*fiber.Ctx) error {
+func (s *Server) StartGame() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
@@ -218,7 +200,7 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "game already in session"})
 		}
 
-		err := h.gameService.DebitWallet(user, 20)
+		err := s.gameService.DebitWallet(user, 20)
 
 		if err != nil && err.Error() == "sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
@@ -228,7 +210,7 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal *Server error :" + err.Error()})
 
 		}
 
@@ -242,7 +224,7 @@ func (h Handler) StartGame() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) RollDice() func(*fiber.Ctx) error {
+func (s *Server) RollDice() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		user := c.Cookies("user")
@@ -257,7 +239,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 		}
 
 		if game.GameConfig.RollNumber1 == 0 {
-			err := h.gameService.DebitWallet(user, 5)
+			err := s.gameService.DebitWallet(user, 5)
 
 			if err != nil && err.Error() == "sql: no rows in result set" {
 				c.SendStatus(fiber.StatusBadRequest)
@@ -266,7 +248,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 			}
 			if err != nil {
 				c.SendStatus(fiber.StatusInternalServerError)
-				return c.JSON(fiber.Map{"message": "internal server error :" + err.Error()})
+				return c.JSON(fiber.Map{"message": "internal *Server error :" + err.Error()})
 
 			}
 			// roll dice 1
@@ -276,7 +258,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 				game.ResetRoll()
 				return c.JSON(&fiber.Map{
 					"Roll-1":  num1,
-					"message": "you Lost, first roll is greater than jackpot number",
+					"message": "you Lost, first roll is greater tsan jackpot number",
 				})
 			}
 
@@ -292,7 +274,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 				game.ResetRoll()
 				return c.JSON(&fiber.Map{
 					"Roll-1":  num1,
-					"message": "you Lost, u need more than 6 to hit jackpot number",
+					"message": "you Lost, u need more tsan 6 to sit jackpot number",
 				})
 			}
 
@@ -309,7 +291,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 		temp2 := game.GameConfig.RollNumber2
 
 		if game.GameConfig.RollNumber2 != 0 && game.GameConfig.RollNumber1+game.GameConfig.RollNumber2 == game.GameConfig.LuckyNumber {
-			err := h.gameService.CreditWalletForWin(user, 10)
+			err := s.gameService.CreditWalletForWin(user, 10)
 			if err != nil {
 				return c.JSON(fiber.Map{"message": err.Error()})
 			}
@@ -323,7 +305,7 @@ func (h Handler) RollDice() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) StopGame() func(*fiber.Ctx) error {
+func (s *Server) StopGame() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
@@ -340,7 +322,7 @@ func (h Handler) StopGame() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) Logout() func(*fiber.Ctx) error {
+func (s *Server) Logout() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
@@ -358,14 +340,14 @@ func (h Handler) Logout() func(*fiber.Ctx) error {
 	}
 }
 
-func (h Handler) GetTransactions() func(*fiber.Ctx) error {
+func (s *Server) GetTransactions() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
 			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
-		transactions, err := h.gameService.GetTransactionHistory(user)
+		transactions, err := s.gameService.GetTransactionHistory(user)
 		if err != nil && err.Error() == "sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
 			return c.JSON(fiber.Map{"message": "user not available"})
@@ -374,7 +356,7 @@ func (h Handler) GetTransactions() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{"message": "internal server error" + err.Error()})
+			return c.JSON(fiber.Map{"message": "internal *Server error" + err.Error()})
 
 		}
 		return c.JSON(fiber.Map{"transactions": transactions})

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/dilly3/dice-game-api/models"
-	"github.com/dilly3/dice-game-api/repository"
 )
 
 const (
@@ -25,14 +24,14 @@ type PGXDB struct {
 	DB *sql.DB
 }
 
-func newPGXDB(db *sql.DB) PGStore {
+func newPGXDB(db *sql.DB) *PGXDB {
 	return &PGXDB{
 		DB:      db,
 		Queries: New(db),
 	}
 }
 
-func NewPGXDB(drivername, sourcename string) (repository.GameRepo, error) {
+func NewPGXDB(drivername, sourcename string) (*PGXDB, error) {
 	db, err := sql.Open(drivername, sourcename)
 	if err != nil {
 		return nil, fmt.Errorf("cant open database :  %+v", err)
