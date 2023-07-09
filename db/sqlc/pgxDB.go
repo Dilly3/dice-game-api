@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-
-	"github.com/dilly3/dice-game-api/models"
 )
 
 const (
@@ -16,8 +14,8 @@ const (
 
 type PGStore interface {
 	Querier
-	DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error
-	CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error
+	DebitWallet(ctx context.Context, arg UpdateWalletParams) error
+	CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error
 }
 type PGXDB struct {
 	*Queries
@@ -60,11 +58,11 @@ func (s *PGXDB) execTx(ctx context.Context, fn func(*Queries) error) error {
 	return tx.Commit()
 }
 
-func (s *PGXDB) DebitWallet(ctx context.Context, arg models.UpdateWalletParams) error {
+func (s *PGXDB) DebitWallet(ctx context.Context, arg UpdateWalletParams) error {
 
 	err1 := s.execTx(ctx, func(q *Queries) error {
 		var err error
-		var wal models.Wallet
+		var wal Wallet
 
 		wal, err = q.GetWalletByUsernameForUpdate(ctx, arg.Username)
 		if err != nil {
@@ -74,7 +72,7 @@ func (s *PGXDB) DebitWallet(ctx context.Context, arg models.UpdateWalletParams) 
 			return fmt.Errorf("insufficient funds : %v", err)
 		}
 
-		err = q.UpdateWallet(ctx, models.UpdateWalletParams{
+		err = q.UpdateWallet(ctx, UpdateWalletParams{
 			Username: arg.Username,
 			Balance:  wal.Balance - arg.Balance,
 		})
@@ -82,7 +80,7 @@ func (s *PGXDB) DebitWallet(ctx context.Context, arg models.UpdateWalletParams) 
 			return err
 		}
 
-		_, err = q.CreateTransaction(ctx, models.CreateTransactionParams{
+		_, err = q.CreateTransaction(ctx, CreateTransactionParams{
 			UserID:          wal.UserID,
 			Amount:          arg.Balance,
 			TransactionType: DEBIT,
@@ -100,11 +98,11 @@ func (s *PGXDB) DebitWallet(ctx context.Context, arg models.UpdateWalletParams) 
 	return err1
 }
 
-func (s *PGXDB) CreditWallet(ctx context.Context, arg models.UpdateWalletParams, win bool) error {
+func (s *PGXDB) CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error {
 
 	err1 := s.execTx(ctx, func(q *Queries) error {
 		var err error
-		var wal models.Wallet
+		var wal Wallet
 
 		wal, err = q.GetWalletByUsernameForUpdate(ctx, arg.Username)
 		if err != nil {
@@ -119,7 +117,7 @@ func (s *PGXDB) CreditWallet(ctx context.Context, arg models.UpdateWalletParams,
 			}
 		}
 
-		err = q.UpdateWallet(ctx, models.UpdateWalletParams{
+		err = q.UpdateWallet(ctx, UpdateWalletParams{
 			Username: arg.Username,
 			Balance:  wal.Balance + arg.Balance,
 		})
@@ -127,7 +125,7 @@ func (s *PGXDB) CreditWallet(ctx context.Context, arg models.UpdateWalletParams,
 			return err
 		}
 
-		_, err = q.CreateTransaction(ctx, models.CreateTransactionParams{
+		_, err = q.CreateTransaction(ctx, CreateTransactionParams{
 			UserID:          wal.UserID,
 			Amount:          arg.Balance,
 			TransactionType: CREDIT,

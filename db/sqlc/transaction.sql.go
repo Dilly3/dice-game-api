@@ -7,9 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/dilly3/dice-game-api/models"
-	
 )
 
 const createTransaction = `-- name: CreateTransaction :one
@@ -21,9 +18,15 @@ INSERT INTO transactions (
 RETURNING id, user_id, username, amount, balance, transaction_type, created_at
 `
 
+type CreateTransactionParams struct {
+	UserID          int64  `json:"user_id"`
+	Amount          int  `json:"amount"`
+	Balance         int  `json:"balance"`
+	TransactionType string `json:"transaction_type"`
+	Username        string `json:"username"`
+}
 
-
-func (q *Queries) CreateTransaction(ctx context.Context, arg models.CreateTransactionParams) (models.Transaction, error) {
+func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
 	row := q.db.QueryRowContext(ctx, createTransaction,
 		arg.UserID,
 		arg.Amount,
@@ -31,7 +34,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg models.CreateTransa
 		arg.TransactionType,
 		arg.Username,
 	)
-	var i models.Transaction
+	var i Transaction
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -50,11 +53,14 @@ WHERE user_id = $1
 AND transaction_type = $2
 `
 
+type GetTransactionParams struct {
+	UserID          int64  `json:"user_id"`
+	TransactionType string `json:"transaction_type"`
+}
 
-
-func (q *Queries) GetTransaction(ctx context.Context, arg models.GetTransactionParams) (models.Transaction, error) {
+func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error) {
 	row := q.db.QueryRowContext(ctx, getTransaction, arg.UserID, arg.TransactionType)
-	var i models.Transaction
+	var i Transaction
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -73,15 +79,15 @@ WHERE username = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string) ([]models.Transaction, error) {
+func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string) ([]Transaction, error) {
 	rows, err := q.db.QueryContext(ctx, getTransactionsByUsername, username)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []models.Transaction
+	var items []Transaction
 	for rows.Next() {
-		var i models.Transaction
+		var i Transaction
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -111,9 +117,13 @@ UPDATE transactions
 WHERE username = $1
 `
 
+type UpdateTransactionParams struct {
+	Username string `json:"username"`
+	Balance  int  `json:"balance"`
+	Amount   int  `json:"amount"`
+}
 
-
-func (q *Queries) UpdateTransaction(ctx context.Context, arg models.UpdateTransactionParams ) error {
+func (q *Queries) UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) error {
 	_, err := q.db.ExecContext(ctx, updateTransaction, arg.Username, arg.Balance, arg.Amount)
 	return err
 }
