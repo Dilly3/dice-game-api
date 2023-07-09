@@ -13,6 +13,7 @@ import (
 	db "github.com/dilly3/dice-game-api/db/sqlc"
 	"github.com/dilly3/dice-game-api/game"
 	"github.com/dilly3/dice-game-api/server"
+	"github.com/dilly3/dice-game-api/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 
@@ -38,14 +39,17 @@ func main() {
 
 	fmt.Println("welcome to Dice Game")
 	game.ResetGame()
+	var err error
 
-	db, err := db.NewPGXDB(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
+	db.DefaultGameRepo, err = db.NewPGXDB(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
 	<-time.After(time.Second * 2)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	service.DefaultGameService = service.NewGameService(db.DefaultGameRepo)
 	app := fiber.New()
-	s := server.NewServer(":8000", db, app)
+	s := server.NewServer(":8000", service.DefaultGameService, app)
 
 	s.StartServer()
 

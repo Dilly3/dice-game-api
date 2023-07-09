@@ -9,13 +9,12 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/dilly3/dice-game-api/config"
-	"github.com/dilly3/dice-game-api/repository"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
 var C config.Configuration
-var StoreIntx repository.GameRepo
+var StoreIntx IGameRepo
 var err error
 
 func init() {
