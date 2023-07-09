@@ -5,39 +5,52 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dilly3/dice-game-api/models"
-	"github.com/dilly3/dice-game-api/repository"
+	db "github.com/dilly3/dice-game-api/db/sqlc"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var once sync.Once
-var DefaultGameService GameService
-
-type GameService struct {
-	Database repository.GameRepo
+type IGameService interface {
+	CreateUser(userData db.CreateUserParams) (db.User, error)
+	GetUserByUsername(ctx context.Context, username string) (db.User, error)
+	GetAllUsers(ctx context.Context, arg db.ListUsersParams) ([]db.User, error)
+	CreditWalletForWin(username string, amount int) error
+	CreditWallet(username string, amount int) error
+	DebitWallet(username string, amount int) error
+	UpdateGameMode(username string, mode bool) error
+	GetTransactionHistory(username string) ([]db.Transaction, error)
+	CreateTransaction(args db.CreateTransactionParams) (db.Transaction, error)
+	GetWalletBalance(username string) (int, string, error)
 }
 
-func newGameService(db repository.GameRepo) GameService {
+var DefaultGameService IGameService
 
-	return GameService{
+var once sync.Once
+
+type GameService struct {
+	Database db.IGameRepo
+}
+
+func NewGameService(db db.IGameRepo) *GameService {
+
+	return &GameService{
 		Database: db,
 	}
 }
 
-func GetGameService(db repository.GameRepo) GameService {
+func GetGameService(db db.IGameRepo) IGameService {
 	once.Do(func() {
-		DefaultGameService = newGameService(db)
+		DefaultGameService = NewGameService(db)
 	})
 	return DefaultGameService
 
 }
-func (s *GameService) CreateUser(userData models.CreateUserParams) (models.User, error) {
+func (s *GameService) CreateUser(userData db.CreateUserParams) (db.User, error) {
 
 	hashpassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return models.User{}, fmt.Errorf("cant hash password : %v", err)
+		return db.User{}, fmt.Errorf("cant hash password : %v", err)
 	}
-	usr := models.CreateUserParams{
+	usr := db.CreateUserParams{
 		Firstname: userData.Firstname,
 		Lastname:  userData.Lastname,
 		Username:  userData.Username,
@@ -46,10 +59,10 @@ func (s *GameService) CreateUser(userData models.CreateUserParams) (models.User,
 
 	user, err := s.Database.CreateUser(context.Background(), usr)
 	if err != nil {
-		return models.User{}, fmt.Errorf("database error : %v", err)
+		return db.User{}, fmt.Errorf("database error : %v", err)
 	}
 
-	s.Database.CreateWallet(context.Background(), models.CreateWalletParams{
+	s.Database.CreateWallet(context.Background(), db.CreateWalletParams{
 		UserID:   user.ID,
 		Username: user.Username,
 	})
@@ -57,14 +70,14 @@ func (s *GameService) CreateUser(userData models.CreateUserParams) (models.User,
 
 }
 
-func (s *GameService) GetAllUsers(ctx context.Context, arg models.ListUsersParams) ([]models.User, error) {
+func (s *GameService) GetAllUsers(ctx context.Context, arg db.ListUsersParams) ([]db.User, error) {
 	return s.Database.ListUsers(ctx, arg)
 }
-func (s *GameService) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+func (s *GameService) GetUserByUsername(ctx context.Context, username string) (db.User, error) {
 	return s.Database.GetUserByUsername(ctx, username)
 }
 
-func (s *GameService) GetWalletBalance(username string) (int32, string, error) {
+func (s *GameService) GetWalletBalance(username string) (int, string, error) {
 	wallet, err := s.Database.GetWalletByUsername(context.Background(), username)
 	if err != nil {
 		return 0, "", fmt.Errorf("cant get wallet : %v", err)
@@ -72,8 +85,8 @@ func (s *GameService) GetWalletBalance(username string) (int32, string, error) {
 	return wallet.Balance, wallet.Assets, nil
 }
 
-func (s GameService) CreditWallet(username string, amount int32) error {
-	err := s.Database.CreditWallet(context.Background(), models.UpdateWalletParams{
+func (s GameService) CreditWallet(username string, amount int) error {
+	err := s.Database.CreditWallet(context.Background(), db.UpdateWalletParams{
 		Balance:  amount,
 		Username: username,
 	}, false)
@@ -84,8 +97,8 @@ func (s GameService) CreditWallet(username string, amount int32) error {
 	return nil
 }
 
-func (s GameService) CreditWalletForWin(username string, amount int32) error {
-	err := s.Database.CreditWallet(context.Background(), models.UpdateWalletParams{
+func (s GameService) CreditWalletForWin(username string, amount int) error {
+	err := s.Database.CreditWallet(context.Background(), db.UpdateWalletParams{
 		Balance:  amount,
 		Username: username,
 	}, true)
@@ -96,8 +109,8 @@ func (s GameService) CreditWalletForWin(username string, amount int32) error {
 	return nil
 }
 
-func (s GameService) DebitWallet(username string, amount int32) error {
-	err := s.Database.DebitWallet(context.Background(), models.UpdateWalletParams{
+func (s GameService) DebitWallet(username string, amount int) error {
+	err := s.Database.DebitWallet(context.Background(), db.UpdateWalletParams{
 		Balance:  amount,
 		Username: username,
 	})
@@ -115,7 +128,7 @@ func (s GameService) UpdateGameMode(username string, mode bool) error {
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
-	err = s.Database.UpdateUserGameMode(context.Background(), models.UpdateUserGameModeParams{
+	err = s.Database.UpdateUserGameMode(context.Background(), db.UpdateUserGameModeParams{
 		Username: user.Username,
 		GameMode: mode,
 	})
@@ -127,10 +140,10 @@ func (s GameService) UpdateGameMode(username string, mode bool) error {
 	return nil
 }
 
-func (s GameService) GetTransactionHistory(username string) ([]models.Transaction, error) {
+func (s GameService) GetTransactionHistory(username string) ([]db.Transaction, error) {
 	return s.Database.GetTransactionsByUsername(context.Background(), username)
 }
 
-func (s GameService) CreateTransaction(args models.CreateTransactionParams) (models.Transaction, error) {
+func (s GameService) CreateTransaction(args db.CreateTransactionParams) (db.Transaction, error) {
 	return s.Database.CreateTransaction(context.Background(), args)
 }

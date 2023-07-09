@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dilly3/dice-game-api/repository"
 	"github.com/dilly3/dice-game-api/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -15,11 +14,10 @@ type Server struct {
 	Router      *fiber.App
 	Port        string
 	Logger      *zap.Logger
-	gameService service.GameService
+	gameService service.IGameService
 }
 
-func NewServer(port string, repo repository.GameRepo, router *fiber.App) *Server {
-	gservice := service.GetGameService(repo)
+func NewServer(port string, gservice service.IGameService, router *fiber.App) *Server {
 	logger, err := zap.NewProduction()
 	if err != nil {
 		fmt.Printf("error setting up Logger =>%v\n", err)
