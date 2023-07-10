@@ -9,6 +9,7 @@ type Configuration struct {
 	DbDataSourceNameTest string
 	DbDataSourceName     string
 	Db                   *sql.DB
+	Port                 string
 }
 
 var ConfigTx Configuration

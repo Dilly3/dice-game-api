@@ -49,7 +49,7 @@ func main() {
 
 	service.DefaultGameService = service.NewGameService(db.DefaultGameRepo)
 	app := fiber.New()
-	s := server.NewServer(":8000", service.DefaultGameService, app)
+	s := server.NewServer(config.ConfigTx.Port, app)
 
 	s.StartServer()
 
@@ -57,7 +57,7 @@ func main() {
 
 	go func() {
 
-		errs <- s.Listen()
+		errs <- s.ListenAndServe()
 	}()
 	c := make(chan os.Signal, 1)
 	go func() {
