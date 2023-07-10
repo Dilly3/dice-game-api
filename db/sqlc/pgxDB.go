@@ -16,6 +16,7 @@ type PGStore interface {
 	Querier
 	DebitWallet(ctx context.Context, arg UpdateWalletParams) error
 	CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error
+	CreateUserTX(ctx context.Context, arg CreateUserParams) (User, Wallet, error)
 }
 type PGXDB struct {
 	*Queries
@@ -141,4 +142,28 @@ func (s *PGXDB) CreditWallet(ctx context.Context, arg UpdateWalletParams, win bo
 	})
 
 	return err1
+}
+
+func (s *PGXDB) CreateUserTX(ctx context.Context, arg CreateUserParams) (User, Wallet, error) {
+	var err error
+	var user User
+	var wal Wallet
+	err1 := s.execTx(ctx, func(q *Queries) error {
+
+		user, err = q.CreateUser(ctx, arg)
+		if err != nil {
+			return fmt.Errorf("error creating user : %+v", err)
+		}
+
+		wal, err = q.CreateWallet(ctx, CreateWalletParams{
+			UserID:   user.ID,
+			Username: user.Username,
+		})
+		if err != nil {
+			return fmt.Errorf("error creating wallet : %+v", err)
+		}
+
+		return nil
+	})
+	return user, wal, err1
 }

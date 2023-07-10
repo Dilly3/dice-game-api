@@ -57,7 +57,7 @@ func (s *GameService) CreateUser(userData db.CreateUserParams) (db.User, error) 
 		Password:  string(hashpassword),
 	}
 
-	user, err := s.Database.CreateUser(context.Background(), usr)
+	user, _, err := s.Database.CreateUserTX(context.Background(), usr)
 	if err != nil {
 		return db.User{}, fmt.Errorf("database error : %v", err)
 	}
