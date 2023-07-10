@@ -21,6 +21,7 @@ type IGameRepo interface {
 	DebitWallet(ctx context.Context, arg UpdateWalletParams) error
 	CreditWallet(ctx context.Context, arg UpdateWalletParams, win bool) error
 	CreateUserTX(ctx context.Context, arg CreateUserParams) (User, Wallet, error)
+	DeleteWallet(ctx context.Context, username string) error
 }
 
 var DefaultGameRepo IGameRepo

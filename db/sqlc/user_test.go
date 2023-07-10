@@ -16,6 +16,18 @@ func CreateUser(t *testing.T) (User, Wallet) {
 		Password:  util.GenerateRandomString(10),
 	}
 	user, wal, err := StoreIntx.CreateUserTX(context.Background(), params)
+	defer func() error {
+		err := StoreIntx.DeleteWallet(context.Background(), wal.Username)
+		if err != nil {
+			return err
+		}
+
+		err = StoreIntx.DeleteUser(context.Background(), user.Username)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 	require.NotEmpty(t, wal)

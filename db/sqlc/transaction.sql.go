@@ -119,7 +119,7 @@ WHERE username = $1
 
 type UpdateTransactionParams struct {
 	Username string `json:"username"`
-	Balance  int  `json:"balance"`
+	Balance  int `json:"balance"`
 	Amount   int  `json:"amount"`
 }
 

@@ -13,6 +13,7 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateWallet(ctx context.Context, arg CreateWalletParams) (Wallet, error)
 	DeleteUser(ctx context.Context, username string) error
+	DeleteWallet(ctx context.Context, username string) error
 	GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error)
 	GetTransactionsByUsername(ctx context.Context, username string) ([]Transaction, error)
 	GetUser(ctx context.Context, username string) (User, error)

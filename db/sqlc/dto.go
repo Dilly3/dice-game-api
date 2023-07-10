@@ -1,5 +1,7 @@
 package db
 
+import "golang.org/x/crypto/bcrypt"
+
 type RegisterUserDto struct {
 	Firstname       string `json:"firstname"`
 	Lastname        string `json:"lastname"`
@@ -19,4 +21,13 @@ type CreateWalletDto struct {
 type UpdateWalletDto struct {
 	Username string `json:"username"`
 	Amount   int    `json:"amount"`
+}
+
+func (user *User) HashPassword() {
+	hashpassword, _ := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
+	user.Password = string(hashpassword)
+}
+
+func (user *User) CompareHashAndPassword(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 }

@@ -7,6 +7,9 @@ INSERT INTO wallets (
 )
 RETURNING *;
 
+-- name: DeleteWallet :exec
+DELETE FROM wallets
+WHERE username = $1;
 
 -- name: GetWalletByUsername :one
 SELECT * FROM wallets

@@ -37,6 +37,16 @@ func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) (Wal
 	return i, err
 }
 
+const deleteWallet = `-- name: DeleteWallet :exec
+DELETE FROM wallets
+WHERE username = $1
+`
+
+func (q *Queries) DeleteWallet(ctx context.Context, username string) error {
+	_, err := q.db.ExecContext(ctx, deleteWallet, username)
+	return err
+}
+
 const getWalletByUsername = `-- name: GetWalletByUsername :one
 SELECT id, user_id, username, balance, assets, updated_at FROM wallets
 WHERE username = $1
