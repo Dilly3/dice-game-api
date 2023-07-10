@@ -8,14 +8,15 @@ import (
 
 	db "github.com/dilly3/dice-game-api/db/sqlc"
 	"github.com/dilly3/dice-game-api/game"
+	"github.com/dilly3/dice-game-api/service"
 	"github.com/dilly3/dice-game-api/util"
 	"github.com/gofiber/fiber/v2"
 )
 
-func (s *Server) GetUsers() func(*fiber.Ctx) error {
+func GetUsers() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
-		users, err := s.gameService.GetAllUsers(context.Background(), db.ListUsersParams{Limit: 10, Offset: 0})
+		users, err := service.DefaultGameService.GetAllUsers(context.Background(), db.ListUsersParams{Limit: 10, Offset: 0})
 
 		if err != nil {
 			return err
@@ -25,7 +26,7 @@ func (s *Server) GetUsers() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) Register() func(*fiber.Ctx) error {
+func Register() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := &db.RegisterUserDto{}
 		if err := c.BodyParser(user); err == fiber.ErrUnprocessableEntity {
@@ -33,7 +34,7 @@ func (s *Server) Register() func(*fiber.Ctx) error {
 
 		}
 
-		dbuser, _ := s.gameService.GetUserByUsername(context.Background(), user.Username)
+		dbuser, _ := service.DefaultGameService.GetUserByUsername(context.Background(), user.Username)
 		if dbuser.ID != 0 {
 			return util.ErrorResponse(c, "username already exists", fiber.StatusBadRequest)
 
@@ -44,7 +45,7 @@ func (s *Server) Register() func(*fiber.Ctx) error {
 
 		}
 
-		dbuser, err := s.gameService.CreateUser(db.CreateUserParams{
+		dbuser, err := service.DefaultGameService.CreateUser(db.CreateUserParams{
 			Firstname: user.Firstname,
 			Lastname:  user.Lastname,
 			Username:  user.Username,
@@ -60,7 +61,7 @@ func (s *Server) Register() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) Login() func(*fiber.Ctx) error {
+func Login() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loginbody := &db.LoginDto{}
 		if err := c.BodyParser(loginbody); err == fiber.ErrUnprocessableEntity {
@@ -69,7 +70,7 @@ func (s *Server) Login() func(*fiber.Ctx) error {
 		}
 		dbuser := db.User{}
 		// Get first matcsed record
-		dbuser, err := s.gameService.GetUserByUsername(context.Background(), loginbody.Username)
+		dbuser, err := service.DefaultGameService.GetUserByUsername(context.Background(), loginbody.Username)
 		if err != nil {
 			return util.ErrorResponse(c, "email or password incorrect", fiber.StatusBadRequest)
 
@@ -87,7 +88,7 @@ func (s *Server) Login() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) GetWalletBalance() func(*fiber.Ctx) error {
+func GetWalletBalance() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		username := c.Cookies("user")
 		if username == "" {
@@ -95,7 +96,7 @@ func (s *Server) GetWalletBalance() func(*fiber.Ctx) error {
 
 		}
 
-		bal, _, err := s.gameService.GetWalletBalance(username)
+		bal, _, err := service.DefaultGameService.GetWalletBalance(username)
 
 		if err != nil && err.Error() == "cant get wallet : sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
@@ -115,7 +116,7 @@ func (s *Server) GetWalletBalance() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) CreditWallet() func(*fiber.Ctx) error {
+func CreditWallet() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		username := c.Cookies("user")
 		if username == "" {
@@ -124,7 +125,7 @@ func (s *Server) CreditWallet() func(*fiber.Ctx) error {
 
 		}
 
-		err := s.gameService.CreditWallet(username, 155)
+		err := service.DefaultGameService.CreditWallet(username, 155)
 
 		if err != nil && err.Error() == "sql: no rows in result set" {
 
@@ -142,12 +143,11 @@ func (s *Server) CreditWallet() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) DebitWallet() func(*fiber.Ctx) error {
+func DebitWallet() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		username := c.Cookies("user")
 		if username == "" {
-			c.SendStatus(fiber.StatusForbidden)
 			return util.ErrorResponse(c, "user not logged in", fiber.StatusForbidden)
 
 		}
@@ -159,7 +159,7 @@ func (s *Server) DebitWallet() func(*fiber.Ctx) error {
 
 		}
 
-		err := s.gameService.DebitWallet(username, body.Amount)
+		err := service.DefaultGameService.DebitWallet(username, body.Amount)
 
 		if err != nil && err.Error() == "sql: no rows in result set" {
 			c.SendStatus(fiber.StatusBadRequest)
@@ -177,7 +177,7 @@ func (s *Server) DebitWallet() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) GetSessionState() func(*fiber.Ctx) error {
+func GetSessionState() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		username := c.Cookies("user")
@@ -190,7 +190,7 @@ func (s *Server) GetSessionState() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) StartGame() func(*fiber.Ctx) error {
+func StartGame() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
@@ -201,10 +201,9 @@ func (s *Server) StartGame() func(*fiber.Ctx) error {
 			return c.JSON(fiber.Map{"message": "game already in session"})
 		}
 
-		err := s.gameService.DebitWallet(user, 20)
+		err := service.DefaultGameService.DebitWallet(user, 20)
 
 		if err != nil && err.Error() == "sql: no rows in result set" {
-			c.SendStatus(fiber.StatusBadRequest)
 			return c.JSON(fiber.Map{"message": "user not available"})
 
 		}
@@ -222,7 +221,7 @@ func (s *Server) StartGame() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) RollDice() func(*fiber.Ctx) error {
+func RollDice() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		user := c.Cookies("user")
@@ -236,7 +235,7 @@ func (s *Server) RollDice() func(*fiber.Ctx) error {
 		}
 
 		if game.GameConfig.RollNumber1 == 0 {
-			err := s.gameService.DebitWallet(user, 5)
+			err := service.DefaultGameService.DebitWallet(user, 5)
 
 			if err != nil && err.Error() == "sql: no rows in result set" {
 				return util.ErrorResponse(c, "user not available", fiber.StatusBadRequest)
@@ -279,7 +278,7 @@ func (s *Server) RollDice() func(*fiber.Ctx) error {
 		temp1 := game.GameConfig.RollNumber1
 
 		if game.GameConfig.RollNumber2 != 0 && game.GameConfig.RollNumber1+game.GameConfig.RollNumber2 == game.GameConfig.LuckyNumber {
-			err := s.gameService.CreditWalletForWin(user, 10)
+			err := service.DefaultGameService.CreditWalletForWin(user, 10)
 			if err != nil {
 				return util.ErrorResponse(c, "internal server error "+err.Error(), fiber.StatusInternalServerError)
 
@@ -294,7 +293,7 @@ func (s *Server) RollDice() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) StopGame() func(*fiber.Ctx) error {
+func StopGame() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
@@ -313,7 +312,7 @@ func (s *Server) StopGame() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) Logout() func(*fiber.Ctx) error {
+func Logout() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
@@ -332,14 +331,14 @@ func (s *Server) Logout() func(*fiber.Ctx) error {
 	}
 }
 
-func (s *Server) GetTransactions() func(*fiber.Ctx) error {
+func GetTransactions() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
 		if user == "" {
 			return util.ErrorResponse(c, "user not logged in", fiber.StatusForbidden)
 
 		}
-		transactions, err := s.gameService.GetTransactionHistory(user)
+		transactions, err := service.DefaultGameService.GetTransactionHistory(user)
 		if err != nil && err.Error() == "sql: no rows in result set" {
 
 			return util.ErrorResponse(c, "user not available", fiber.StatusBadRequest)
