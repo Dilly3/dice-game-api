@@ -9,15 +9,27 @@ import (
 
 func TestGetBalance(t *testing.T) {
 	user, wallet := CreateUser(t)
-	wallet, err := StoreIntx.GetWalletByUsername(context.Background(), user.Username)
+	defer func() error {
+		err := DefaultGameRepo.DeleteWallet(context.Background(), wallet.Username)
+		if err != nil {
+			return err
+		}
+
+		err = DefaultGameRepo.DeleteUser(context.Background(), user.Username)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+	wallet, err := DefaultGameRepo.GetWalletByUsername(context.Background(), user.Username)
 	require.NoError(t, err)
 	require.Equal(t, wallet.Balance, 0)
 
-	StoreIntx.UpdateWallet(context.Background(), UpdateWalletParams{
+	DefaultGameRepo.UpdateWallet(context.Background(), UpdateWalletParams{
 		Username: user.Username,
 		Balance:  100,
 	})
-	wallet, err = StoreIntx.GetWalletByUsername(context.Background(), user.Username)
+	wallet, err = DefaultGameRepo.GetWalletByUsername(context.Background(), user.Username)
 	require.NoError(t, err)
 	require.Equal(t, wallet.Balance, 100)
 	require.Equal(t, wallet.Username, user.Username)

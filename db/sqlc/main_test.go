@@ -14,7 +14,6 @@ import (
 )
 
 var C config.Configuration
-var StoreIntx IGameRepo
 var err error
 
 func init() {
@@ -32,7 +31,7 @@ func init() {
 
 func TestMain(m *testing.M) {
 
-	StoreIntx, err = NewPGXDB(C.DbDriverName, C.DbDataSourceName)
+	DefaultGameRepo, err = NewPGXDB(C.DbDriverName, C.DbDataSourceName)
 	if err != nil {
 		log.Fatal(err)
 	}

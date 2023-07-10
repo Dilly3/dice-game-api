@@ -15,19 +15,8 @@ func CreateUser(t *testing.T) (User, Wallet) {
 		Username:  util.GenerateRandomUsername(5),
 		Password:  util.GenerateRandomString(10),
 	}
-	user, wal, err := StoreIntx.CreateUserTX(context.Background(), params)
-	defer func() error {
-		err := StoreIntx.DeleteWallet(context.Background(), wal.Username)
-		if err != nil {
-			return err
-		}
+	user, wal, err := DefaultGameRepo.CreateUserTX(context.Background(), params)
 
-		err = StoreIntx.DeleteUser(context.Background(), user.Username)
-		if err != nil {
-			return err
-		}
-		return nil
-	}()
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 	require.NotEmpty(t, wal)
@@ -36,14 +25,26 @@ func CreateUser(t *testing.T) (User, Wallet) {
 	require.Equal(t, params.Firstname, user.Firstname)
 	require.Equal(t, wal.Balance, 0)
 	require.Equal(t, params.Firstname, user.Firstname)
-	user, err = StoreIntx.GetUserByUsername(context.Background(), user.Username)
+	user, err = DefaultGameRepo.GetUserByUsername(context.Background(), user.Username)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 	return user, wal
 }
 
 func TestCreateUser(t *testing.T) {
-	CreateUser(t)
+	user, wal := CreateUser(t)
+	defer func() error {
+		err := DefaultGameRepo.DeleteWallet(context.Background(), wal.Username)
+		if err != nil {
+			return err
+		}
+
+		err = DefaultGameRepo.DeleteUser(context.Background(), user.Username)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
 	//testQueries.DeleteAccount(context.Background(), user.Username)
 
 }
