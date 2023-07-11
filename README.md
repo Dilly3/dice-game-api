@@ -35,7 +35,7 @@ If the player’s dual roll does not win, well, he has lost his 5 sat and can re
 * start game        GET localhost:8000/api/v1/start
 * roll dice          GET localhost:8000/api/v1/roll
 * end game          GET localhost:8000/api/v1/end
-* get transactions   GET localhost:8000/api/v1/transactions
+* get transactions   GET localhost:8000/api/v1/transactions/{limit int} 
 
 ```
 

@@ -17,6 +17,11 @@ migrate-up:
 # run air init to create air.toml file
 # run air to start the server
 
+generate-mock:
+	mockgen -destination=mocks/services_mock.go -package=mocks github.com/dilly3/dice-game-api/service IGameService
+	mockgen -destination=mocks/repo_mock.go -package=mocks github.com/dilly3/dice-game-api/db/sqlc IGameRepo
+	mockgen -destination=mocks/userService_mock.go -package=mocks github.com/dilly3/dice-game-api/db/sqlc IUser
+
 migrate-down:
 	@migrate -path db/migrations -database postgresql://root:root@localhost:4300/dice_game?sslmode=disable -verbose down
 migrate-force:
