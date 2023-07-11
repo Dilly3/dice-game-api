@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -48,8 +49,8 @@ func main() {
 	}
 
 	service.DefaultGameService = service.NewGameService(db.DefaultGameRepo)
-	app := fiber.New()
-	s := server.NewServer(config.ConfigTx.Port, app)
+	server.FiberEngine = fiber.New()
+	s := server.NewServer(config.ConfigTx.Port, server.FiberEngine)
 
 	s.StartServer()
 
@@ -62,6 +63,9 @@ func main() {
 	c := make(chan os.Signal, 1)
 	go func() {
 		signal.Notify(c, syscall.SIGINT)
+		ctxx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		defer cancel()
+		<-ctxx.Done()
 
 	}()
 
@@ -70,10 +74,12 @@ func main() {
 		log.Printf("server error: %s", err)
 		os.Exit(1)
 	case sig := <-c:
-		log.Printf("received signal %s", sig)
+		log.Printf("received signal %v", sig)
 		<-time.After(time.Second * 1)
 		log.Printf("gracefully shutting down server...")
 		<-time.After(time.Second * 1)
 		os.Exit(0)
+
 	}
+
 }

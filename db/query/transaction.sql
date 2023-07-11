@@ -14,7 +14,8 @@ AND transaction_type = $2;
 -- name: GetTransactionsByUsername :many
 SELECT * FROM transactions
 WHERE username = $1
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT $2;
 
 
 -- name: UpdateTransaction :exec
