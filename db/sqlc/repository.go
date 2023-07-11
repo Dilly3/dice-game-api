@@ -1,14 +1,18 @@
 package db
 
-import "context"
+import (
+	"context"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 type IGameRepo interface {
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateWallet(ctx context.Context, arg CreateWalletParams) (Wallet, error)
 	DeleteUser(ctx context.Context, username string) error
+	GetTransactionsByUsername(ctx context.Context, arg GetTransactionsByUsernameParams) ([]Transaction, error)
 	GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error)
-	GetTransactionsByUsername(ctx context.Context, username string) ([]Transaction, error)
 	GetUser(ctx context.Context, username string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserForUpdate(ctx context.Context, username string) (User, error)
@@ -25,3 +29,4 @@ type IGameRepo interface {
 }
 
 var DefaultGameRepo IGameRepo
+var TestRouter *fiber.App
