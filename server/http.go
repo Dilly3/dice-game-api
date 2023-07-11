@@ -1,13 +1,20 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"go.uber.org/zap"
 )
+
+var FiberEngine *fiber.App
 
 type Routes []Route
 type handler []func(c *fiber.Ctx) error
@@ -113,7 +120,34 @@ var routes = Routes{
 	},
 	Route{
 		Method:  "GET",
-		Path:    "/transactions",
+		Path:    "/transactions/:limit",
 		Handler: handler{GetTransactions()},
 	},
+}
+
+var ExecuteRequest = func(method, address string, body any, cookie string) ([]byte, error) {
+
+	bodyJSON, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(method, address, bytes.NewReader(bodyJSON))
+	if err != nil {
+		return nil, err
+	}
+	if cookie != "" {
+
+		cookie := &http.Cookie{Name: "user", Value: cookie, Expires: time.Now().Add(time.Hour * 24)}
+		req.AddCookie(cookie)
+	}
+	resp, err1 := FiberEngine.Test(req, -1)
+	if err1 != nil {
+		return nil, err
+	}
+	byt, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return byt, nil
 }

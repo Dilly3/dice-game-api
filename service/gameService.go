@@ -17,7 +17,7 @@ type IGameService interface {
 	CreditWallet(username string, amount int) error
 	DebitWallet(username string, amount int) error
 	UpdateGameMode(username string, mode bool) error
-	GetTransactionHistory(username string) ([]db.Transaction, error)
+	GetTransactionHistory(username string, limit int) ([]db.Transaction, error)
 	CreateTransaction(args db.CreateTransactionParams) (db.Transaction, error)
 	GetWalletBalance(username string) (int, string, error)
 }
@@ -140,8 +140,8 @@ func (s GameService) UpdateGameMode(username string, mode bool) error {
 	return nil
 }
 
-func (s GameService) GetTransactionHistory(username string) ([]db.Transaction, error) {
-	return s.Database.GetTransactionsByUsername(context.Background(), username)
+func (s GameService) GetTransactionHistory(username string, limit int) ([]db.Transaction, error) {
+	return s.Database.GetTransactionsByUsername(context.Background(), db.GetTransactionsByUsernameParams{Username: username, Limit: limit})
 }
 
 func (s GameService) CreateTransaction(args db.CreateTransactionParams) (db.Transaction, error) {

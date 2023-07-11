@@ -77,10 +77,16 @@ const getTransactionsByUsername = `-- name: GetTransactionsByUsername :many
 SELECT id, user_id, username, amount, balance, transaction_type, created_at FROM transactions
 WHERE username = $1
 ORDER BY created_at DESC
+LIMIT $2
 `
 
-func (q *Queries) GetTransactionsByUsername(ctx context.Context, username string) ([]Transaction, error) {
-	rows, err := q.db.QueryContext(ctx, getTransactionsByUsername, username)
+type GetTransactionsByUsernameParams struct {
+	Username string `json:"username"`
+	Limit    int  `json:"limit"`
+}
+
+func (q *Queries) GetTransactionsByUsername(ctx context.Context, arg GetTransactionsByUsernameParams) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, getTransactionsByUsername, arg.Username, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +125,7 @@ WHERE username = $1
 
 type UpdateTransactionParams struct {
 	Username string `json:"username"`
-	Balance  int `json:"balance"`
+	Balance  int  `json:"balance"`
 	Amount   int  `json:"amount"`
 }
 

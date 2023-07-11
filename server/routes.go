@@ -1,8 +1,12 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"strconv"
 
 	"time"
 
@@ -29,12 +33,22 @@ func GetUsers() func(*fiber.Ctx) error {
 func Register() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := &db.RegisterUserDto{}
-		if err := c.BodyParser(user); err == fiber.ErrUnprocessableEntity {
-			return util.ErrorResponse(c, "invalid json", fiber.StatusBadRequest)
 
+		bytes, err := ioutil.ReadAll(bytes.NewReader(c.Body()))
+		if err != nil {
+			return util.ErrorResponse(c, "empty json", fiber.StatusBadRequest)
 		}
 
+		err = json.Unmarshal(bytes, user)
+		if err != nil {
+			return util.ErrorResponse(c, "invalid json", fiber.StatusBadRequest)
+		}
+		err = db.VerifyUserData(user)
+		if err != nil {
+			return util.ErrorResponse(c, err.Error(), fiber.StatusBadRequest)
+		}
 		dbuser, _ := service.DefaultGameService.GetUserByUsername(context.Background(), user.Username)
+
 		if dbuser.ID != 0 {
 			return util.ErrorResponse(c, "username already exists", fiber.StatusBadRequest)
 
@@ -45,7 +59,7 @@ func Register() func(*fiber.Ctx) error {
 
 		}
 
-		dbuser, err := service.DefaultGameService.CreateUser(db.CreateUserParams{
+		dbuser, err = service.DefaultGameService.CreateUser(db.CreateUserParams{
 			Firstname: user.Firstname,
 			Lastname:  user.Lastname,
 			Username:  user.Username,
@@ -64,20 +78,26 @@ func Register() func(*fiber.Ctx) error {
 func Login() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		loginbody := &db.LoginDto{}
-		if err := c.BodyParser(loginbody); err == fiber.ErrUnprocessableEntity {
-			return util.ErrorResponse(c, "bad login credentials", fiber.StatusBadRequest)
 
+		bytes, err := ioutil.ReadAll(bytes.NewReader(c.Body()))
+		if err != nil {
+			return util.ErrorResponse(c, "empty json", fiber.StatusBadRequest)
 		}
-		dbuser := db.User{}
-		// Get first matcsed record
+
+		err = json.Unmarshal(bytes, loginbody)
+		if err != nil {
+			return util.ErrorResponse(c, "bad login credentials", fiber.StatusBadRequest)
+		}
+
+		// Get first matched record
 		dbuser, err := service.DefaultGameService.GetUserByUsername(context.Background(), loginbody.Username)
 		if err != nil {
-			return util.ErrorResponse(c, "email or password incorrect", fiber.StatusBadRequest)
+			return util.ErrorResponse(c, "email or password incorrect, user", fiber.StatusBadRequest)
 
 		}
 
-		if err := dbuser.CompareHashAndPassword(loginbody.Password); err != nil || dbuser.ID == 0 {
-			return util.ErrorResponse(c, "email or password incorrect", fiber.StatusBadRequest)
+		if err := db.CompareHashAndPassword(dbuser, loginbody.Password); err != nil || dbuser.ID == 0 {
+			return util.ErrorResponse(c, "email or password incorrect , pass", fiber.StatusBadRequest)
 
 		}
 
@@ -334,11 +354,16 @@ func Logout() func(*fiber.Ctx) error {
 func GetTransactions() func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		user := c.Cookies("user")
+
 		if user == "" {
 			return util.ErrorResponse(c, "user not logged in", fiber.StatusForbidden)
 
 		}
-		transactions, err := service.DefaultGameService.GetTransactionHistory(user)
+		limit, err := strconv.Atoi(c.Params("limit"))
+		if err != nil {
+			return util.ErrorResponse(c, "request missing query", fiber.StatusBadRequest)
+		}
+		transactions, err := service.DefaultGameService.GetTransactionHistory(user, limit)
 		if err != nil && err.Error() == "sql: no rows in result set" {
 
 			return util.ErrorResponse(c, "user not available", fiber.StatusBadRequest)

@@ -31,6 +31,20 @@ func CreateUser(t *testing.T) (User, Wallet) {
 	return user, wal
 }
 
+func CreateUserSample(t *testing.T) (User, Wallet) {
+	params := CreateUserParams{
+		Firstname: util.GenerateRandomString(8),
+		Lastname:  util.GenerateRandomString(9),
+		Username:  util.GenerateRandomUsername(5),
+		Password:  util.GenerateRandomString(10),
+	}
+	user, wal, err := DefaultGameRepo.CreateUserTX(context.Background(), params)
+	if err != nil {
+		t.Fail()
+	}
+	return user, wal
+}
+
 func TestCreateUser(t *testing.T) {
 	user, wal := CreateUser(t)
 	defer func() error {
@@ -45,6 +59,7 @@ func TestCreateUser(t *testing.T) {
 		}
 		return nil
 	}()
+
 	//testQueries.DeleteAccount(context.Background(), user.Username)
 
 }
