@@ -51,7 +51,7 @@ func (mr *MockIGameServiceMockRecorder) CreateTransaction(arg0 interface{}) *gom
 }
 
 // CreateUser mocks base method.
-func (m *MockIGameService) CreateUser(arg0 db.CreateUserParams) (db.User, error) {
+func (m *MockIGameService) CreateUser(arg0 db.RegisterUserDto) (db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", arg0)
 	ret0, _ := ret[0].(db.User)

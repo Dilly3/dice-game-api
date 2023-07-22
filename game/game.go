@@ -6,9 +6,13 @@ import (
 
 type Game struct {
 	IsGameInSession bool
-	RollNumber1     int
-	RollNumber2     int
+	Gamescore       GameScore
 	LuckyNumber     int
+}
+
+type GameScore struct {
+	RollNumber1 int `json:"roll1,omitempty"`
+	RollNumber2 int `json:"roll2,omitempty"`
 }
 
 var GameConfig Game
@@ -16,23 +20,23 @@ var GameConfig Game
 var ResetGame = func() {
 	GameConfig.IsGameInSession = false
 	GameConfig.LuckyNumber = 0
-	GameConfig.RollNumber1 = 0
-	GameConfig.RollNumber2 = 0
+	GameConfig.Gamescore.RollNumber1 = 0
+	GameConfig.Gamescore.RollNumber2 = 0
 }
 var ResetRoll = func() {
-	GameConfig.RollNumber1 = 0
-	GameConfig.RollNumber2 = 0
+	GameConfig.Gamescore.RollNumber1 = 0
+	GameConfig.Gamescore.RollNumber2 = 0
 }
 
 func RollDice1() {
 	num1 := rand.Intn(6) + 1
-	GameConfig.RollNumber1 = num1
+	GameConfig.Gamescore.RollNumber1 = num1
 
 }
 
 func RollDice2() {
 	num2 := rand.Intn(6) + 1
-	GameConfig.RollNumber2 = num2
+	GameConfig.Gamescore.RollNumber2 = num2
 
 }
 

@@ -4,6 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+
+	"github.com/dilly3/dice-game-api/config"
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 )
 
 const (
@@ -41,6 +46,24 @@ func NewPGXDB(drivername, sourcename string) (*PGXDB, error) {
 	}
 
 	return newPGXDB(db), nil
+}
+
+func SetupTestDb(file string) (*PGXDB, error) {
+	err := godotenv.Load(file)
+	if err != nil {
+		log.Fatal("Error loading .env file: ", err.Error())
+	}
+
+	err = envconfig.Process("dicegame", &config.ConfigTx)
+	fmt.Println("SPECIFICATION => ", config.ConfigTx.DbDataSourceName)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	tx, err := NewPGXDB(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return tx, err
 }
 
 func (s *PGXDB) execTx(ctx context.Context, fn func(*Queries) error) error {

@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err.Error())
 	}
 
-	DefaultGameRepo, err = NewPGXDB(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
+	DefaultGameRepo, err = SetupTestDb("../../.env")
 	if err != nil {
 		log.Fatal(err)
 	}
