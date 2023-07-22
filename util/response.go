@@ -3,6 +3,7 @@ package util
 import (
 	"time"
 
+	"github.com/dilly3/dice-game-api/game"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -11,6 +12,8 @@ type ResponseDto struct {
 	Data          interface{} `json:"data,omitempty"`
 	Errors        []string    `json:"errors,omitempty"`
 	Status        int         `json:"status,omitempty"`
+	Balance       string      `json:"balance,omitempty"`
+	Assts         string      `json:"assets,omitempty"`
 	JackpotNumber int         `json:"jackpot_number,omitempty"`
 	TimeStamp     string      `json:"timestamp,omitempty"`
 }
@@ -20,18 +23,15 @@ type ResponseError struct {
 	Status  int    `json:"status,omitempty"`
 }
 type RollResponseDto struct {
-	Message string `json:"message,omitempty"`
-	Roll_1  int    `json:"roll-1,omitempty"`
-	Roll_2  int    `json:"roll-2,omitempty"`
+	Message   string         `json:"message,omitempty"`
+	Gamescore game.GameScore `json:"game_score,omitempty"`
+	JackpotNumber int         `json:"jackpot_number,omitempty"`
 }
 
-func RollResponse(f *fiber.Ctx, message string, roll_1 int, roll_2 int) error {
+func RollResponse(f *fiber.Ctx, arg RollResponseDto) error {
 	f.SendStatus(fiber.StatusOK)
-	responsedata := RollResponseDto{
-		Message: message,
-		Roll_1:  roll_1,
-		Roll_2:  roll_2,
-	}
+	responsedata := arg
+
 	return f.JSON(responsedata)
 }
 
@@ -57,16 +57,10 @@ func ErrorResponse(f *fiber.Ctx, message string, status int) error {
 	return f.JSON(responsedata)
 }
 
-func Response(f *fiber.Ctx, message string, status int, data interface{}, jackpotNum int, errs []string) error {
-	f.SendStatus(status)
-	responsedata := ResponseDto{
-		Message:       message,
-		Data:          data,
-		Errors:        errs,
-		JackpotNumber: jackpotNum,
-		Status:        status,
-		TimeStamp:     time.Now().Format("2006-01-02 15:04:05"),
-	}
-	return f.JSON(responsedata)
+func Response(f *fiber.Ctx, args *ResponseDto) error {
+	f.SendStatus(args.Status)
+	args.TimeStamp = time.Now().Format("2006-01-02 15:04:05")
+
+	return f.JSON(args)
 
 }

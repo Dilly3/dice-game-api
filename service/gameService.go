@@ -10,7 +10,7 @@ import (
 )
 
 type IGameService interface {
-	CreateUser(userData db.CreateUserParams) (db.User, error)
+	CreateUser(userData db.RegisterUserDto) (db.User, error)
 	GetUserByUsername(ctx context.Context, username string) (db.User, error)
 	GetAllUsers(ctx context.Context, arg db.ListUsersParams) ([]db.User, error)
 	CreditWalletForWin(username string, amount int) error
@@ -44,7 +44,11 @@ func GetGameService(db db.IGameRepo) IGameService {
 	return DefaultGameService
 
 }
-func (s *GameService) CreateUser(userData db.CreateUserParams) (db.User, error) {
+func (s *GameService) CreateUser(userData db.RegisterUserDto) (db.User, error) {
+
+	if userData.Password != userData.ConfirmPassword {
+		return db.User{}, fmt.Errorf("password and confirm password does not match")
+	}
 
 	hashpassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/golang/mock/gomock"
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,7 +28,8 @@ func TestRegister(t *testing.T) {
 		body       any
 		assertions func(*util.ResponseDto, int, string)
 		Expected   string
-		Stubs      func(*mocks.MockIGameService)
+		Stubs      func(*mocks.MockIGameService, *db.PGXDB, service.IGameService)
+		database   func(*db.PGXDB)
 	}{
 		{
 			body: &db.RegisterUserDto{
@@ -42,8 +44,20 @@ func TestRegister(t *testing.T) {
 			status:   201,
 			method:   http.MethodPost,
 			Expected: "user created successfully",
-			Stubs: func(mockservice *mocks.MockIGameService) {
-				mockservice.EXPECT().CreateUser(gomock.Any()).AnyTimes().Return(db.User{}, nil)
+			Stubs: func(mockservice *mocks.MockIGameService, dbx *db.PGXDB, service service.IGameService) {
+				mockservice.EXPECT().CreateUser(gomock.Any()).DoAndReturn(func(arg db.RegisterUserDto) (db.User, error) {
+					userParam := db.RegisterUserDto{
+						Firstname:       "michael",
+						Lastname:        "meghan",
+						Username:        "mickgo",
+						Password:        "test",
+						ConfirmPassword: "test",
+					}
+					dbUser, err := service.CreateUser(userParam)
+					//dbUser, _, err := dbx.CreateUserTX(context.Background(), userParam)
+					return dbUser, err
+				}).AnyTimes()
+
 				mockservice.EXPECT().GetUserByUsername(context.Background(), gomock.Any()).AnyTimes().Return(db.User{}, nil)
 			},
 			assertions: func(resp *util.ResponseDto, code int, message string) {
@@ -51,12 +65,22 @@ func TestRegister(t *testing.T) {
 				require.Nil(t, resp.Errors)
 				require.Equal(t, resp.Status, code)
 			},
+			database: func(db *db.PGXDB) {
+				user, err := db.GetUserByUsername(context.Background(), "mickgo")
+				db.DeleteWallet(context.Background(), user.Username)
+				db.DeleteUser(context.Background(), user.Username)
+				require.Equal(t, user.Username, "mickgo")
+				require.Equal(t, user.Firstname, "michael")
+				require.Equal(t, user.Lastname, "meghan")
+				require.Nil(t, err)
+
+			},
 		},
 		{
 			body: &db.RegisterUserDto{
-				Firstname:       "michael",
-				Lastname:        "meghan",
-				Username:        "mickgo",
+				Firstname:       "michael0",
+				Lastname:        "meghan0",
+				Username:        "mickgo12",
 				Password:        "test",
 				ConfirmPassword: "teeet",
 			},
@@ -65,8 +89,20 @@ func TestRegister(t *testing.T) {
 			status:   400,
 			method:   http.MethodPost,
 			Expected: "passwords do not match",
-			Stubs: func(mockservice *mocks.MockIGameService) {
-				mockservice.EXPECT().CreateUser(gomock.Any()).AnyTimes().Return(db.User{}, nil)
+			Stubs: func(mockservice *mocks.MockIGameService, dbx *db.PGXDB, service service.IGameService) {
+				mockservice.EXPECT().CreateUser(gomock.Any()).AnyTimes().DoAndReturn(func(arg db.RegisterUserDto) (db.User, error) {
+					userParam := db.RegisterUserDto{
+						Firstname:       "michael0",
+						Lastname:        "meghan0",
+						Username:        "mickgo12",
+						Password:        "test",
+						ConfirmPassword: "teeet",
+					}
+					dbUser, err := service.CreateUser(userParam)
+
+					return dbUser, err
+
+				})
 				mockservice.EXPECT().GetUserByUsername(context.Background(), gomock.Any()).AnyTimes().Return(db.User{}, nil)
 			},
 			assertions: func(resp *util.ResponseDto, code int, message string) {
@@ -74,22 +110,41 @@ func TestRegister(t *testing.T) {
 				require.Nil(t, resp.Errors)
 				require.Equal(t, resp.Status, code)
 			},
+			database: func(db *db.PGXDB) {
+				user, err := db.GetUserByUsername(context.Background(), "mickgo12")
+				require.Zero(t, user.ID)
+				require.NotNil(t, err)
+
+			},
 		},
 		{
-			body:     &db.RegisterUserDto{},
+			body: &db.RegisterUserDto{
+
+				Username: "mickgo23",
+			},
 			name:     "missing fields",
 			Address:  "/register",
 			status:   400,
 			method:   http.MethodPost,
 			Expected: "some fields missing in user data",
-			Stubs: func(mockservice *mocks.MockIGameService) {
-				mockservice.EXPECT().CreateUser(gomock.Any()).AnyTimes().Return(db.User{}, nil)
+			Stubs: func(mockservice *mocks.MockIGameService, dbx *db.PGXDB, service service.IGameService) {
+				mockservice.EXPECT().CreateUser(gomock.Any()).AnyTimes().DoAndReturn(func(arg db.RegisterUserDto) (db.User, error) {
+					userParam := db.RegisterUserDto{}
+					dbUser, err := service.CreateUser(userParam)
+					return dbUser, err
+				})
 				mockservice.EXPECT().GetUserByUsername(context.Background(), gomock.Any()).AnyTimes().Return(db.User{}, nil)
 			},
 			assertions: func(resp *util.ResponseDto, code int, message string) {
 				require.Equal(t, resp.Message, message)
 				require.Nil(t, resp.Errors)
 				require.Equal(t, resp.Status, code)
+			},
+			database: func(db *db.PGXDB) {
+				user, err := db.GetUserByUsername(context.Background(), "mickgo23")
+				require.Zero(t, user.ID)
+				require.NotNil(t, err)
+
 			},
 		},
 	}
@@ -99,15 +154,21 @@ func TestRegister(t *testing.T) {
 	defer ctrl.Finish()
 	FiberEngine = fiber.New()
 	sv := mocks.NewMockIGameService(ctrl)
-
+	var err error
+	var tx *db.PGXDB
 	service.DefaultGameService = sv
+	tx, err = db.SetupTestDb("../.env")
+	if err != nil {
+		t.Fail()
+	}
 
+	srv := service.NewGameService(tx)
 	FiberEngine.Post("/register", Register())
 
 	for _, tc := range tests {
 
 		t.Run(tc.name, func(t *testing.T) {
-			tc.Stubs(sv)
+			tc.Stubs(sv, tx, srv)
 			resp, err := ExecuteRequest(tc.method, tc.Address, tc.body, "")
 			if err != nil {
 				t.Fail()
@@ -119,6 +180,7 @@ func TestRegister(t *testing.T) {
 				t.Fail()
 			}
 			tc.assertions(res, tc.status, tc.Expected)
+			tc.database(tx)
 		})
 	}
 
