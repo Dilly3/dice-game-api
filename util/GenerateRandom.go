@@ -8,7 +8,7 @@ import (
 )
 
 func GenerateRandomString(cap int) string {
-	rand.Seed(time.Now().UnixNano())
+
 	alps := "abcdefghijklmnopqrstuvwxyz"
 	var result = strings.Builder{}
 
@@ -20,17 +20,17 @@ func GenerateRandomString(cap int) string {
 }
 
 func GenerateRandomInt64(cap int64) int64 {
-	rand.Seed(time.Now().UnixNano())
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return rand.Int63n(cap)
 }
 func GenerateRandomInt(cap int) int {
-	rand.Seed(time.Now().UnixNano())
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return rand.Intn(cap)
 }
 
 func GenerateRandomFloat(cap float64) float64 {
-	rand.Seed(time.Now().UnixNano())
-	return (rand.Float64() * cap) / 100
+	NewRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return (NewRand.Float64() * cap) / 100
 }
 
 func GenerateRandomEmail(length int) string {
