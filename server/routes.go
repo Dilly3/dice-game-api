@@ -25,7 +25,7 @@ func GetUsers() func(*fiber.Ctx) error {
 		if err != nil {
 			return err
 		}
-		response := util.NewResponseDtoBuilder().SetMessage("users").SetStatus(fiber.StatusOK).SetData(users).Build()
+		response := util.NewResponseBuilder().SetMessage("users").SetStatus(fiber.StatusOK).SetData(users).Build()
 		return util.Response(c, response)
 	}
 }
@@ -65,7 +65,7 @@ func Register() func(*fiber.Ctx) error {
 			return util.ErrorResponse(c, "internal Server error :"+err.Error(), fiber.StatusBadRequest)
 
 		}
-		response := util.NewResponseDtoBuilder().SetMessage("user created successfully").SetStatus(fiber.StatusCreated).SetData(dbuser).Build()
+		response := util.NewResponseBuilder().SetMessage("user created successfully").SetStatus(fiber.StatusCreated).SetData(dbuser).Build()
 		return util.Response(c, response)
 	}
 }
@@ -98,7 +98,7 @@ func Login() func(*fiber.Ctx) error {
 
 		c.Cookie(&fiber.Cookie{Name: "user", Value: dbuser.Username, HTTPOnly: true, Expires: time.Now().Add(time.Hour * 24)})
 
-		response := util.NewResponseDtoBuilder().SetMessage("login successful").SetStatus(fiber.StatusOK).Build()
+		response := util.NewResponseBuilder().SetMessage("login successful").SetStatus(fiber.StatusOK).SetTimeStamp().Build()
 
 		return util.Response(c, response)
 
@@ -128,7 +128,10 @@ func GetWalletBalance() func(*fiber.Ctx) error {
 		}
 
 		strbal := fmt.Sprintf("%d", bal)
-		return util.WalletBallanceResponse(c, strbal)
+		response := util.NewResponseBuilder().SetStatus(fiber.StatusOK).SetAssets().SetBalance(strbal).
+			SetTimeStamp().
+			Build()
+		return util.Response(c, response)
 
 	}
 }
@@ -155,7 +158,7 @@ func CreditWallet() func(*fiber.Ctx) error {
 			return util.ErrorResponse(c, "internal *Server error :"+err.Error(), fiber.StatusInternalServerError)
 
 		}
-		response := util.NewResponseDtoBuilder().SetMessage("wallet credited").SetStatus(fiber.StatusOK).Build()
+		response := util.NewResponseBuilder().SetMessage("wallet credited").SetStatus(fiber.StatusOK).Build()
 		return util.Response(c, response)
 	}
 }
@@ -202,8 +205,8 @@ func GetSessionState() func(*fiber.Ctx) error {
 			c.SendStatus(fiber.StatusForbidden)
 			return c.JSON(fiber.Map{"message": "user not logged in"})
 		}
-
-		return c.JSON(fiber.Map{"isSessionActive": game.GameConfig.IsGameInSession})
+		response := util.NewResponseBuilder().SetStatus(fiber.StatusOK).SetSessionState(game.GameConfig.IsGameInSession).SetTimeStamp().Build()
+		return util.Response(c, response)
 	}
 }
 
@@ -233,7 +236,7 @@ func StartGame() func(*fiber.Ctx) error {
 		game.StartGame()
 		game.GameConfig.IsGameInSession = true
 		jackpotNum := game.GameConfig.LuckyNumber
-		response := util.NewResponseDtoBuilder().SetMessage("game started, debit 20 sats, roll dice. good luck!").
+		response := util.NewResponseBuilder().SetMessage("game started, debit 20 sats, roll dice. good luck!").
 			SetStatus(fiber.StatusOK).
 			SetJackpotNumber(jackpotNum).
 			Build()
@@ -272,32 +275,32 @@ func RollDice() func(*fiber.Ctx) error {
 			num1 := game.GameConfig.Gamescore.RollNumber1
 			if num1 > game.GameConfig.LuckyNumber {
 				game.ResetRoll()
-				rollResponse := util.NewRollResponseBuilder().SetMessage("you Lost, first roll is greater than jackpot number").SetGameScore(num1, 0).
+				rollResponse := util.NewResponseBuilder().SetMessage("you Lost, first roll is greater than jackpot number").SetGameScore(num1, 0).
 					SetJackpotNumber(game.GameConfig.LuckyNumber).Build()
-				return util.RollResponse(c, rollResponse)
+				return util.Response(c, rollResponse)
 
 			}
 
 			if num1 == game.GameConfig.LuckyNumber {
 				game.ResetRoll()
-				rollResponse := util.NewRollResponseBuilder().
+				rollResponse := util.NewResponseBuilder().
 					SetMessage("you lost, first roll is equal to jackpot number").
 					SetGameScore(num1, 0).
 					SetJackpotNumber(game.GameConfig.LuckyNumber).Build()
-				return util.RollResponse(c, rollResponse)
+				return util.Response(c, rollResponse)
 			}
 
 			if game.GameConfig.LuckyNumber-num1 > 6 {
 				game.ResetRoll()
-				rollResponse := util.NewRollResponseBuilder().SetMessage("you Lost, u need more than 6 to sit jackpot number").SetGameScore(num1, 0).
+				rollResponse := util.NewResponseBuilder().SetMessage("you Lost, u need more than 6 to sit jackpot number").SetGameScore(num1, 0).
 					SetJackpotNumber(game.GameConfig.LuckyNumber).Build()
-				return util.RollResponse(c, rollResponse)
+				return util.Response(c, rollResponse)
 
 			}
-			rollResponse := util.NewRollResponseBuilder().SetMessage(fmt.Sprintf("you need %d to win", game.GameConfig.LuckyNumber-num1)).SetGameScore(num1, 0).
+			rollResponse := util.NewResponseBuilder().SetMessage(fmt.Sprintf("you need %d to win", game.GameConfig.LuckyNumber-num1)).SetGameScore(num1, 0).
 				SetJackpotNumber(game.GameConfig.LuckyNumber).
 				Build()
-			return util.RollResponse(c, rollResponse)
+			return util.Response(c, rollResponse)
 
 		}
 
@@ -315,17 +318,17 @@ func RollDice() func(*fiber.Ctx) error {
 
 			}
 			game.ResetRoll()
-			rollResponse := util.NewRollResponseBuilder().SetMessage("WIN WIN WIN !!!!!!, You won 10 sats").SetGameScore(temp1, temp2).
+			rollResponse := util.NewResponseBuilder().SetMessage("WIN WIN WIN !!!!!!, You won 10 sats").SetGameScore(temp1, temp2).
 				SetJackpotNumber(game.GameConfig.LuckyNumber).
 				Build()
-			return util.RollResponse(c, rollResponse)
+			return util.Response(c, rollResponse)
 		}
 
 		game.ResetRoll()
-		rollResponse := util.NewRollResponseBuilder().SetMessage("you Lost, try again").SetGameScore(temp1, temp2).
+		rollResponse := util.NewResponseBuilder().SetMessage("you Lost, try again").SetGameScore(temp1, temp2).
 			SetJackpotNumber(game.GameConfig.LuckyNumber).
 			Build()
-		return util.RollResponse(c, rollResponse)
+		return util.Response(c, rollResponse)
 
 	}
 }
@@ -339,7 +342,7 @@ func StopGame() func(*fiber.Ctx) error {
 		}
 		if !game.GameConfig.IsGameInSession {
 			c.Status(fiber.StatusUnauthorized)
-			response := util.NewResponseDtoBuilder().SetMessage("game not in session, start game first").
+			response := util.NewResponseBuilder().SetMessage("game not in session, start game first").
 				SetStatus(fiber.StatusBadRequest).
 				Build()
 
@@ -348,7 +351,7 @@ func StopGame() func(*fiber.Ctx) error {
 		}
 
 		game.StopGame()
-		response := util.NewResponseDtoBuilder().SetMessage("game stopped").
+		response := util.NewResponseBuilder().SetMessage("game stopped").
 			SetStatus(fiber.StatusOK).
 			Build()
 		return util.Response(c, response)
@@ -370,7 +373,7 @@ func Logout() func(*fiber.Ctx) error {
 			Expires: time.Now().Add(-time.Hour),
 		})
 		game.StopGame()
-		response := util.NewResponseDtoBuilder().SetMessage("user logged out").
+		response := util.NewResponseBuilder().SetMessage("user logged out").
 			SetStatus(fiber.StatusOK).
 			Build()
 
@@ -402,7 +405,7 @@ func GetTransactions() func(*fiber.Ctx) error {
 			return util.ErrorResponse(c, "internal *Server error :"+err.Error(), fiber.StatusInternalServerError)
 
 		}
-		response := util.NewResponseDtoBuilder().SetMessage("transactions").
+		response := util.NewResponseBuilder().SetMessage("transactions").
 			SetStatus(fiber.StatusOK).
 			SetData(transactions).
 			Build()

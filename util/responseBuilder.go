@@ -1,98 +1,82 @@
 package util
 
-import "github.com/dilly3/dice-game-api/game"
+import (
+	"time"
 
-type RollResponseBuilder struct {
-	Message   string         `json:"message,omitempty"`
-	Gamescore game.GameScore `json:"gameScore,omitempty"`
-	JackpotNumber int         `json:"jackpot_number,omitempty"`
+	"github.com/dilly3/dice-game-api/game"
+)
+
+type ResponseBuilder struct {
+	Message       string
+	Data          any
+	Errors        []string
+	Status        int
+	JackpotNumber int
+	TimeStamp     string
+	Balance       string
+	Assts         string
+	GameScore     any
+	SessionState  bool
 }
 
-func NewRollResponseBuilder() *RollResponseBuilder {
-	return &RollResponseBuilder{}
+func NewResponseBuilder() *ResponseBuilder {
+	return &ResponseBuilder{GameScore: nil, Errors: nil, Data: nil}
 }
-func (r *RollResponseBuilder) SetMessage(message string) *RollResponseBuilder {
+
+func (r *ResponseBuilder) SetMessage(message string) *ResponseBuilder {
 	r.Message = message
 	return r
 }
 
-func (r *RollResponseBuilder) SetGameScore(score1, score2 int) *RollResponseBuilder {
-	r.Gamescore = game.GameScore{
+func (r *ResponseBuilder) SetData(data interface{}) *ResponseBuilder {
+	r.Data = data
+	return r
+}
+
+func (r *ResponseBuilder) SetErrors(errors []string) *ResponseBuilder {
+	r.Errors = errors
+	return r
+}
+
+func (r *ResponseBuilder) SetStatus(status int) *ResponseBuilder {
+	r.Status = status
+	return r
+}
+
+func (r *ResponseBuilder) SetJackpotNumber(jackpotNumber int) *ResponseBuilder {
+	r.JackpotNumber = jackpotNumber
+	return r
+}
+
+func (r *ResponseBuilder) SetTimeStamp() *ResponseBuilder {
+	r.TimeStamp = time.Now().Format("2006-01-02 15:04:05")
+	return r
+}
+
+func (r *ResponseBuilder) SetBalance(bal string) *ResponseBuilder {
+	r.Balance = bal
+	return r
+}
+
+func (r *ResponseBuilder) SetAssets() *ResponseBuilder {
+	r.Assts = "sats"
+	return r
+}
+
+func (r *ResponseBuilder) SetGameScore(score1, score2 int) *ResponseBuilder {
+	r.GameScore = game.GameScore{
 		RollNumber1: score1,
 		RollNumber2: score2,
 	}
 	return r
 }
 
-func (r *RollResponseBuilder) SetJackpotNumber(jackpotNumber int) *RollResponseBuilder {
-	r.JackpotNumber = jackpotNumber
+func (r *ResponseBuilder) SetSessionState(state bool) *ResponseBuilder {
+	r.SessionState = state
 	return r
 }
 
-func (r *RollResponseBuilder) Build() RollResponseDto {
-	return RollResponseDto{
-		Message:   r.Message,
-		Gamescore: r.Gamescore,
-		JackpotNumber: r.JackpotNumber,
-	}
-}
-
-type ResponseDtoBuilder struct {
-	Message       string      `json:"message,omitempty"`
-	Data          interface{} `json:"data,omitempty"`
-	Errors        []string    `json:"errors,omitempty"`
-	Status        int         `json:"status,omitempty"`
-	JackpotNumber int         `json:"jackpot_number,omitempty"`
-	TimeStamp     string      `json:"timestamp,omitempty"`
-	Balance       string      `json:"balance,omitempty"`
-	Assts         string      `json:"assets,omitempty"`
-}
-
-func NewResponseDtoBuilder() *ResponseDtoBuilder {
-	return &ResponseDtoBuilder{}
-}
-
-func (r *ResponseDtoBuilder) SetMessage(message string) *ResponseDtoBuilder {
-	r.Message = message
-	return r
-}
-
-func (r *ResponseDtoBuilder) SetData(data interface{}) *ResponseDtoBuilder {
-	r.Data = data
-	return r
-}
-
-func (r *ResponseDtoBuilder) SetErrors(errors []string) *ResponseDtoBuilder {
-	r.Errors = errors
-	return r
-}
-
-func (r *ResponseDtoBuilder) SetStatus(status int) *ResponseDtoBuilder {
-	r.Status = status
-	return r
-}
-
-func (r *ResponseDtoBuilder) SetJackpotNumber(jackpotNumber int) *ResponseDtoBuilder {
-	r.JackpotNumber = jackpotNumber
-	return r
-}
-
-func (r *ResponseDtoBuilder) SetTimeStamp(timeStamp string) *ResponseDtoBuilder {
-	r.TimeStamp = timeStamp
-	return r
-}
-
-func (r *ResponseDtoBuilder) SetBalance(bal string) *ResponseDtoBuilder {
-	r.Balance = bal
-	return r
-}
-
-func (r *ResponseDtoBuilder) SetAssets(assets string) *ResponseDtoBuilder {
-	r.Assts = assets
-	return r
-}
-
-func (r *ResponseDtoBuilder) Build() *ResponseDto {
+func (r *ResponseBuilder) Build() *ResponseDto {
 	return &ResponseDto{
 		Message:       r.Message,
 		Data:          r.Data,
@@ -100,5 +84,9 @@ func (r *ResponseDtoBuilder) Build() *ResponseDto {
 		Status:        r.Status,
 		JackpotNumber: r.JackpotNumber,
 		TimeStamp:     r.TimeStamp,
+		Balance:       r.Balance,
+		Assts:         r.Assts,
+		GameScore:     r.GameScore,
+		SessionState:  r.SessionState,
 	}
 }
