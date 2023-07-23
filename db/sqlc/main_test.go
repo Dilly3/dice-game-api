@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/dilly3/dice-game-api/config"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
@@ -31,6 +32,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	TestRouter = fiber.New()
+
 	TestRouter.Use(logger.New(logger.Config{
 		Format:     " ${pid} Time:${time} Status: ${status} - ${method} ${path}\n",
 		TimeFormat: "02-Jan-2006 15:04:05",
