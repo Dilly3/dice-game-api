@@ -84,6 +84,10 @@ func Login() func(*fiber.Ctx) error {
 			return util.ErrorResponse(c, "bad login credentials", fiber.StatusBadRequest)
 		}
 
+		if loginbody.Username == "" || loginbody.Password == "" {
+			return util.ErrorResponse(c, "bad login credentials", fiber.StatusBadRequest)
+		}
+
 		// Get first matched record
 		dbuser, err := service.DefaultGameService.GetUserByUsername(context.Background(), loginbody.Username)
 		if err != nil {
@@ -155,7 +159,7 @@ func CreditWallet() func(*fiber.Ctx) error {
 
 		if err != nil {
 			c.SendStatus(fiber.StatusInternalServerError)
-			return util.ErrorResponse(c, "internal *Server error :"+err.Error(), fiber.StatusInternalServerError)
+			return util.ErrorResponse(c, err.Error(), fiber.StatusInternalServerError)
 
 		}
 		response := util.NewResponseBuilder().SetMessage("wallet credited").SetStatus(fiber.StatusOK).Build()

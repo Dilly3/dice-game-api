@@ -35,7 +35,7 @@ migrate-up-test:
 migrate-down-test:
 	@migrate -path db/migrations -database postgresql://root:root@localhost:4300/test-db?sslmode=disable -verbose down
 test:
-	@go test -v -cover ./...
+	@go test -v -cover ./.../...
 run:
 	@go run main.go 
 air:

@@ -13,6 +13,7 @@ type IGameRepo interface {
 	DeleteUser(ctx context.Context, username string) error
 	GetTransactionsByUsername(ctx context.Context, arg GetTransactionsByUsernameParams) ([]Transaction, error)
 	GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error)
+	DeleteTransactionByUsername(ctx context.Context, username string) error
 	GetUser(ctx context.Context, username string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserForUpdate(ctx context.Context, username string) (User, error)
