@@ -17,6 +17,9 @@ WHERE username = $1
 ORDER BY created_at DESC
 LIMIT $2;
 
+-- name: DeleteTransactionByUsername :exec
+DELETE FROM transactions
+WHERE username = $1;
 
 -- name: UpdateTransaction :exec
 UPDATE transactions
