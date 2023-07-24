@@ -28,13 +28,10 @@ func TestMain(m *testing.M) {
 		log.Fatal(err.Error())
 	}
 
-	tx, err := db.SetupTestDb("../.env")
+	db.DefaultGameRepo = db.NewDatabaseFactory().GetDatabaseInstance(db.POSTGRES, &config.ConfigTx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer tx.DB.Close()
-
-	db.DefaultGameRepo = tx
 
 	service.DefaultGameService = service.NewGameService(db.DefaultGameRepo)
 

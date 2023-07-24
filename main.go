@@ -41,8 +41,8 @@ func main() {
 	fmt.Println("welcome to Dice Game")
 	game.ResetGame()
 	var err error
+	db.DefaultGameRepo = db.NewDatabaseFactory().GetDatabaseInstance(db.POSTGRES, &config.ConfigTx)
 
-	db.DefaultGameRepo, err = db.NewPGXDB(config.ConfigTx.DbDriverName, config.ConfigTx.DbDataSourceName)
 	<-time.After(time.Second * 2)
 	if err != nil {
 		log.Fatal(err)

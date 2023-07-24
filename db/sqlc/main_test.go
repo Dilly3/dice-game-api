@@ -27,10 +27,8 @@ func TestMain(m *testing.M) {
 		log.Fatal(err.Error())
 	}
 
-	DefaultGameRepo, err = SetupTestDb("../../.env")
-	if err != nil {
-		log.Fatal(err)
-	}
+	DefaultGameRepo = NewDatabaseFactory().GetDatabaseInstance(POSTGRES, &config.ConfigTx)
+
 	TestRouter = fiber.New()
 
 	TestRouter.Use(logger.New(logger.Config{
